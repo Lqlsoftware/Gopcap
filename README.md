@@ -9,11 +9,11 @@ A web server based on pcap TCP layer.
 Open Gopcap in your $GOPATH.
 
     go build gopcap
-    go build src/main.go (Optional.) 
+    go build main.go (Optional.) 
 
 ## Usage:
 Put static html to "./root/".
 
-    go run src/main.go
+    go run main.go
     or
     ./main
