@@ -40,7 +40,9 @@ func NewConnection(channel *chan gopacket.Packet, request gopacket.Packet) *Conn
 		State: 		UNCONNECT,
 	}
 	// 进行TCP握手
-	conn.handShake()
+	// 发送SYN
+	conn.sendSYN()
+	conn.State = WAITSYNACK
 	return conn
 }
 
@@ -49,30 +51,4 @@ func (conn *Connection)Update(rawPacket gopacket.Packet) {
 	tcp := rawPacket.Layer(layers.LayerTypeTCP).(*layers.TCP)
 	conn.srcSeq = tcp.Ack
 	conn.dstSeq = tcp.Seq + uint32(len(tcp.Payload))
-}
-
-// TCP握手
-func (conn *Connection)handShake() {
-	// 发送SYN
-	conn.sendSYN()
-	// 等待client的ACK
-	if conn.getACK() {
-		conn.State = CONNECTED
-	}
-}
-
-// 等待ACK
-func (conn *Connection)getACK() bool {
-	time := 0
-	for {
-		select {
-		case <-*conn.Channel:
-			return true
-		}
-		// 超时关闭连接
-		time++
-		if time > tcpTimeout {
-			return false
-		}
-	}
 }

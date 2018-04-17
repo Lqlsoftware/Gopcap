@@ -31,7 +31,6 @@ func listen(adapter *pcap.Interface, port layers.TCPPort) {
 		select {
 		case packet := <-in:
 			// tcp包
-			fmt.Println(packet)
 			tcp.PacketHandler(packet)
 		}
 	}

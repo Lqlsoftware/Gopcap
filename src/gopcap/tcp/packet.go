@@ -60,7 +60,6 @@ func (conn *Connection)sendSYN() {
 		DstPort: 	conn.dstPort,
 		SYN:     	true,
 		ACK:	 	true,
-		Seq:		0,
 		Ack:	 	conn.dstSeq + 1,
 		Window:  	0xFFFF,
 		Options:	[]layers.TCPOption{{layers.TCPOptionKindMSS,4,[]byte{5,189}}},

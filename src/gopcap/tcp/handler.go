@@ -40,27 +40,32 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	for {
 		select {
 		case request := <-*tcpConn.Channel:
+			if request.TransportLayer().(*layers.TCP).Ack < tcpConn.srcSeq {
+				continue
+			}
+			tcpConn.Update(request)
 			switch tcpConn.State {
 			case UNCONNECT:
-				tcpConn = NewConnection(channel, request)
+				tcpLayer := request.Layer(layers.LayerTypeTCP).(*layers.TCP)
+				if tcpLayer.SYN == true {
+					tcpConn = NewConnection(channel, request)
+				} else if tcpLayer.FIN == true {
+					tcpConn.sendFin()
+					tcpConn.State = SENDFIN
+				}
+			case WAITSYNACK:
+				tcpConn.State = CONNECTED
 			case CONNECTED:
-				tcpConn.Update(request)
 				tcpConn.sendAck()
 				response := http.HttpHandler(request)
 				tcpConn.WriteData(response)
-				tcpConn.State = WAITACK
-			case WAITACK:
-				if request.TransportLayer().(*layers.TCP).Ack < tcpConn.srcSeq {
-					continue
-				}
-				tcpConn.Update(request)
+				tcpConn.State = SENDDATA
+			case SENDDATA:
 				tcpConn.sendFin()
 				tcpConn.State = SENDFIN
 			case SENDFIN:
-				tcpConn.Update(request)
 				tcpConn.State = WAITFINACK
 			case WAITFINACK:
-				tcpConn.Update(request)
 				tcpConn.dstSeq++
 				tcpConn.sendAck()
 				tcpConn.State = UNCONNECT

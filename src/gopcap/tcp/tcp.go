@@ -6,7 +6,6 @@ type State uint8
 const (
 	UNCONNECT	State = 0
 	CONNECTED	State = 1
-	SENDSYN		State = 2
 	WAITSYNACK	State = 3
 	SENDDATA	State = 4
 	RECEIVEDATA	State = 5

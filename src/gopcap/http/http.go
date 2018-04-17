@@ -87,8 +87,7 @@ func getMethodName(method HttpMethod) string {
 }
 
 func (rep *httpResponse)getBytes() []byte {
-	(*rep.Header)["Content-Type"] = "text/html; charset=utf-8"
-	length := 38// + len(*rep.Contents)
+	length := 38 + len(*rep.Contents)
 	for key,value := range *rep.Header {
 		length += len(key) + len(value) + 4
 	}
@@ -172,6 +171,7 @@ func parser(raw []byte) *httpRequest {
 
 func GETHandler(request *httpRequest, response *httpResponse) {
 	dat, err := ioutil.ReadFile("root" + *request.Url)
+	(*response.Header)["Content-Type"] = "text/html; charset=utf-8"
 	if err != nil {
 		response.StateCode = NotFound
 		msg := []byte("<html>ERROR 404!</html>")
