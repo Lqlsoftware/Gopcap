@@ -183,9 +183,13 @@ func GETHandler(request *httpRequest, response *httpResponse) {
 }
 
 func POSTHandler(request *httpRequest, response *httpResponse) {
-
+	response.StateCode = OK
+	msg := []byte("POST REQUEST: " + *request.Url)
+	response.Contents = &msg
 }
 
 func HEADHandler(request *httpRequest, response *httpResponse) {
-
+	var msg []byte
+	response.StateCode = OK
+	response.Contents = &msg
 }

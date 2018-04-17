@@ -47,7 +47,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				tcpConn.Update(request)
 				tcpConn.sendAck()
 				response := http.HttpHandler(request)
-				tcpConn.write(response)
+				tcpConn.WriteData(response)
 				tcpConn.State = WAITACK
 			case WAITACK:
 				if request.TransportLayer().(*layers.TCP).Ack < tcpConn.srcSeq {
