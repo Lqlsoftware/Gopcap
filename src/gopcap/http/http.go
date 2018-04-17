@@ -1,8 +1,6 @@
 package http
 
 import (
-	"gopcap/tcp"
-
 	"github.com/google/gopacket"
 	"fmt"
 	"io/ioutil"
@@ -114,9 +112,9 @@ func (rep *httpResponse)getBytes() []byte {
 	return buf
 }
 
-func HttpHandler(conn *tcp.Connection,rawPacket gopacket.Packet) {
+func HttpHandler(rawPacket gopacket.Packet) []byte {
 	if rawPacket.ApplicationLayer() == nil {
-		return
+		return []byte{}
 	}
 	request := parser(rawPacket.ApplicationLayer().Payload())
 	fmt.Println(getMethodName(request.Method),*request.Url)
@@ -131,7 +129,8 @@ func HttpHandler(conn *tcp.Connection,rawPacket gopacket.Packet) {
 	default:
 		GETHandler(request, response)
 	}
-	conn.WriteData(response.getBytes())
+	return response.getBytes()
+	//conn.WriteData(response.getBytes())
 }
 
 func parser(raw []byte) *httpRequest {

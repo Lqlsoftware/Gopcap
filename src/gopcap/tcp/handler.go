@@ -1,20 +1,21 @@
-package handler
+package tcp
 
 import (
 	"gopcap/http"
-	"gopcap/tcp"
-
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 )
 
-var conn *pcap.Handle
-func SetConn(handle *pcap.Handle) {
-	conn = handle
+var sendChannel *pcap.Handle
+func SetSendChannel(channel *pcap.Handle) {
+	sendChannel = channel
 }
 
 func PacketHandler(packet gopacket.Packet) {
+	if packet == nil {
+		return
+	}
 	// 解析TCP报文
 	tcpLayer := packet.Layer(layers.LayerTypeTCP).(*layers.TCP)
 	// 处理请求
@@ -33,39 +34,40 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	channel := addChannel(dstPort)
 	defer delChannel(dstPort)
 	// 建立TCP连接
-	tcpConn := tcp.NewConnection(conn, channel, synPacket)
+	tcpConn := NewConnection(channel, synPacket)
 	// 超时计时器
-	timer := NewTimer(tcp.TcpTimeout)
+	timer := NewTimer(tcpTimeout)
 	for {
 		select {
 		case request := <-*tcpConn.Channel:
 			switch tcpConn.State {
-			case tcp.UNCONNECT:
-				tcpConn = tcp.NewConnection(conn, channel, request)
-			case tcp.CONNECTED:
+			case UNCONNECT:
+				tcpConn = NewConnection(channel, request)
+			case CONNECTED:
 				tcpConn.Update(request)
 				tcpConn.sendAck()
-				http.HttpHandler(tcpConn,request)
-				tcpConn.State = tcp.WAITACK
-			case tcp.WAITACK:
-				if request.TransportLayer().(*layers.TCP).Ack < tcpConn.SrcSeq {
+				response := http.HttpHandler(request)
+				tcpConn.write(response)
+				tcpConn.State = WAITACK
+			case WAITACK:
+				if request.TransportLayer().(*layers.TCP).Ack < tcpConn.srcSeq {
 					continue
 				}
 				tcpConn.Update(request)
 				tcpConn.sendFin()
-				tcpConn.State = tcp.FIN
-			case tcp.FIN:
+				tcpConn.State = SENDFIN
+			case SENDFIN:
 				tcpConn.Update(request)
-				tcpConn.State = tcp.WAITFINACK
-			case tcp.WAITFINACK:
+				tcpConn.State = WAITFINACK
+			case WAITFINACK:
 				tcpConn.Update(request)
-				tcpConn.DstSeq++
+				tcpConn.dstSeq++
 				tcpConn.sendAck()
-				tcpConn.State = tcp.UNCONNECT
+				tcpConn.State = UNCONNECT
 				timer.Reset()
 			}
 		}
-		if tcpConn.State == tcp.UNCONNECT {
+		if tcpConn.State == UNCONNECT {
 			if timer.Tick() {
 				return
 			}

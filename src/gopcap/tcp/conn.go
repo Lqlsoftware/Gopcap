@@ -3,7 +3,6 @@ package tcp
 import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
 )
 
 type Connection struct {
@@ -18,13 +17,12 @@ type Connection struct {
 	dstMac		[]byte
 	dstSeq		uint32
 	Channel		*chan gopacket.Packet
-	handle		*pcap.Handle
 	State		State
 }
 
 
 // 新建连接
-func NewConnection(handle *pcap.Handle, channel *chan gopacket.Packet, request gopacket.Packet) *Connection {
+func NewConnection(channel *chan gopacket.Packet, request gopacket.Packet) *Connection {
 	reqTCP := request.Layer(layers.LayerTypeTCP).(*layers.TCP)
 	reqIP := request.Layer(layers.LayerTypeIPv4).(*layers.IPv4)
 	reqETH := request.Layer(layers.LayerTypeEthernet).(*layers.Ethernet)
@@ -40,7 +38,6 @@ func NewConnection(handle *pcap.Handle, channel *chan gopacket.Packet, request g
 		dstSeq:		reqTCP.Seq,
 		Channel:	channel,
 		State: 		UNCONNECT,
-		handle: 	handle,
 	}
 	// 进行TCP握手
 	conn.handShake()

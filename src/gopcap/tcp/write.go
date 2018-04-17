@@ -1,6 +1,8 @@
 package tcp
 
 import (
+	"fmt"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
@@ -46,6 +48,7 @@ func (conn *Connection)writeRaw(buf gopacket.SerializeBuffer, ethLayer *layers.E
 	check(err)
 	err = ethLayer.SerializeTo(buf, gopacket.SerializeOptions{false,true})
 	check(err)
-	err = conn.handle.WritePacketData(buf.Bytes())
+	err = sendChannel.WritePacketData(buf.Bytes())
+	fmt.Println("Send:\n",gopacket.NewPacket(buf.Bytes(),layers.LayerTypeEthernet,gopacket.DecodeOptions{}))
 	check(err)
 }

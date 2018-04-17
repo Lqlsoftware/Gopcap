@@ -1,6 +1,6 @@
 package tcp
 
-const TcpTimeout = 200
+const tcpTimeout = 200
 
 type State uint8
 const (
