@@ -1,6 +1,8 @@
-package main
+package http
 
 import (
+	"gopcap/tcp"
+
 	"github.com/google/gopacket"
 	"fmt"
 	"io/ioutil"
@@ -112,7 +114,7 @@ func (rep *httpResponse)getBytes() []byte {
 	return buf
 }
 
-func httpHandler(conn *Connection,rawPacket gopacket.Packet) {
+func HttpHandler(conn *tcp.Connection,rawPacket gopacket.Packet) {
 	if rawPacket.ApplicationLayer() == nil {
 		return
 	}

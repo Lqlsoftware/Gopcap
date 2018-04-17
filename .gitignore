@@ -18,3 +18,7 @@ root/
 
 # Goland configue file
 .idea/
+
+# Go Binaries
+bin/
+pkg/
