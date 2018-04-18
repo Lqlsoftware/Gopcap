@@ -21,3 +21,25 @@ Put static html to "./root/".
     go run main.go
     or
     ./main
+
+---
+## Develop
+Import gopcap package:
+```
+import "github.com/Lqlsoftware/gopcap"
+```
+Write a handle function like:
+```
+func handler(req *http.HttpRequest, rep *http.HttpResponse) {
+    rep.Write("Hello World!\n")
+}
+```
+Bind your handle function with an URL:
+```
+gopcap.Bind("/", http.GET, handler)
+```
+Start server with port:
+```
+gopcap.Start(8998)
+```
+Enjoy!
