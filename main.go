@@ -6,11 +6,15 @@ import (
 )
 
 func main() {
-	gopcap.Bind("/", http.GET, handler)
-	// 启动服务器
+	// bind url router
+	gopcap.Bind("/", http.POST, rootHandler)
+	// start server
 	gopcap.Start(8998)
 }
 
-func handler(req *http.HttpRequest, rep*http.HttpResponse) {
-	rep.Write("Hello World!")
+func rootHandler(req *http.HttpRequest, rep*http.HttpResponse) {
+	rep.Write("Hello World!\n")
+	for _,v := range req.GetAllParamKey() {
+		rep.Write(v,":",req.GetParam(v),"\n")
+	}
 }

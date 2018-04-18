@@ -15,6 +15,6 @@ func getAdapter() *pcap.Interface {
 		}
 	}
 	fmt.Println("Select Devices:",adapters[idx].Name)
-	fmt.Println("Address:",adapters[idx].Addresses)
+	fmt.Println("Address:",adapters[idx].Addresses[len(adapters[idx].Addresses) - 1].IP)
 	return &adapters[idx]
 }

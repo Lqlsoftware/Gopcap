@@ -4,6 +4,7 @@ import (
 	"github.com/google/gopacket"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -47,8 +48,30 @@ type HttpResponse struct {
 	ContentType	string
 }
 
-func (rep *HttpResponse)Write(data string) {
-	rep.contents = append(rep.contents, []byte(data)...)
+func (req *HttpRequest)GetParam(key string) string {
+	return (*req.param)[key]
+}
+
+func (req *HttpRequest)GetAllParamKey() []string {
+	res := make([]string,0,len(*req.param))
+	for v := range *req.param {
+		res = append(res, v)
+	}
+	return res
+}
+
+
+func (rep *HttpResponse)Write(Data ...interface{}) {
+	for argNum, arg := range Data {
+		if argNum > 0 {
+			rep.contents = append(rep.contents,' ')
+		}
+		if arg != nil {
+			rep.contents = append(rep.contents, []byte(reflect.ValueOf(arg).String())...)
+		} else {
+			rep.contents = append(rep.contents,[]byte("nil")...)
+		}
+	}
 }
 
 func (rep *HttpResponse)SetHeader(key string, value string) {
@@ -154,6 +177,8 @@ func parser(raw []byte) *HttpRequest {
 		idx++
 	}
 	first := strings.Split(string(raw[:idx])," ")
+	url := first[1]
+	version := first[2]
 	idx += 2
 	start = idx
 	for idx < len(raw) {
@@ -161,24 +186,57 @@ func parser(raw []byte) *HttpRequest {
 			if idx <= start {
 				break
 			}
-			idx += 2
 			header[key] = string(raw[start:idx])
+			idx += 2
 			start = idx
 		} else if v == 58 && raw[idx + 1] == 32 {
-			idx += 2
 			key = string(raw[start:idx])
+			idx += 2
 			start = idx
 		} else {
 			idx++
 		}
 	}
 	contents := string(raw[idx:])
+	parameter := make(map[string]string)
+	if HttpMethod(raw[0]) == GET {
+		s := strings.IndexByte(url,'?')
+		if s >= 0 {
+			param := strings.Split(url[s + 1:], "&")
+			url = url[:s]
+			for _,v := range param {
+				idx := strings.IndexByte(v,'=')
+				key := v[:idx]
+				value := v[idx + 1:]
+				parameter[key] = value
+			}
+		}
+	} else if HttpMethod(raw[0]) == POST {
+		contentType := header["content-type"]
+		s := strings.Index(contentType,"boundary=")
+		if s >= 0 {
+			boundary := contentType[s + 9:] + "\r\n"
+			if len(boundary) != 0 {
+				param := strings.Split(contents, boundary)
+				for _,v := range param {
+					start := strings.Index(v,"name=\"")
+					end := strings.Index(v,"\"\r\n\r\n")
+					if start >= 0 && end >= 0 {
+						key := v[start + 6:end]
+						value := v[end + 5:]
+						parameter[key] = value
+					}
+				}
+			}
+		}
+	}
 	request := &HttpRequest{
 		method: 	HttpMethod(raw[0]),
 		header: 	&header,
 		contents: 	&contents,
-		url:		&first[1],
-		version:	&first[2],
+		url:		&url,
+		version:	&version,
+		param:		&parameter,
 	}
 	return request
 }
