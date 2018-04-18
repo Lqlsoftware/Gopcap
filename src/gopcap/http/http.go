@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/google/gopacket"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"reflect"
@@ -147,7 +148,10 @@ func HttpHandler(rawPacket gopacket.Packet) []byte {
 	if rawPacket.ApplicationLayer() == nil {
 		return []byte{}
 	}
-	request := parser(rawPacket.ApplicationLayer().Payload())
+	request,err := parser(rawPacket.ApplicationLayer().Payload())
+	if err != nil {
+		return []byte{}
+	}
 	fmt.Println(getmethodName(request.method),*request.url)
 	response := generateResponse(request)
 	key := []byte(*request.url)
@@ -169,7 +173,7 @@ func HttpHandler(rawPacket gopacket.Packet) []byte {
 	return response.getBytes()
 }
 
-func parser(raw []byte) *HttpRequest {
+func parser(raw []byte) (*HttpRequest,error) {
 	header := make(map[string]string)
 	idx,start := 0,0
 	key := ""
@@ -177,6 +181,9 @@ func parser(raw []byte) *HttpRequest {
 		idx++
 	}
 	first := strings.Split(string(raw[:idx])," ")
+	if len(first) < 3 {
+		return nil,errors.New("ERROR: UNKNOWN HTTP CONTENT")
+	}
 	url := first[1]
 	version := first[2]
 	idx += 2
@@ -238,7 +245,7 @@ func parser(raw []byte) *HttpRequest {
 		version:	&version,
 		param:		&parameter,
 	}
-	return request
+	return request, nil
 }
 
 func GETHandler(request *HttpRequest, response *HttpResponse) {
@@ -261,4 +268,10 @@ func POSTHandler(request *HttpRequest, response *HttpResponse) {
 func HEADHandler(request *HttpRequest, response *HttpResponse) {
 	response.stateCode = OK
 	response.contents = []byte{}
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

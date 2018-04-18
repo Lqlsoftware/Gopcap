@@ -57,6 +57,9 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				tcpConn.State = CONNECTED
 			case CONNECTED:
 				tcpConn.sendAck()
+				if request.ApplicationLayer() == nil {
+					continue
+				}
 				response := http.HttpHandler(request)
 				tcpConn.WriteData(response)
 				tcpConn.State = SENDDATA
