@@ -16,47 +16,56 @@ const (
 	HEAD	HttpMethod = 72
 )
 
-type HttpStateCode uint16
+type HttpstateCode uint16
 const (
-	OK 						HttpStateCode = 200
-	BadRequest				HttpStateCode = 400
-	Unauthorized			HttpStateCode = 401
-	Forbidden				HttpStateCode = 403
-	NotFound				HttpStateCode = 404
-	InternalServerError		HttpStateCode = 500
-	ServerUnavailable		HttpStateCode = 503
+	OK 						HttpstateCode = 200
+	BadRequest				HttpstateCode = 400
+	Unauthorized			HttpstateCode = 401
+	Forbidden				HttpstateCode = 403
+	NotFound				HttpstateCode = 404
+	InternalServerError		HttpstateCode = 500
+	ServerUnavailable		HttpstateCode = 503
 )
 
 var CRLF = []byte{13,10}
 var SEP = []byte{58,32}
 
-type httpRequest struct {
-	Url			*string
-	Version		*string
-	Header 		*map[string]string
-	Method		HttpMethod
-	Contents	*string
+type HttpRequest struct {
+	url			*string
+	version		*string
+	header 		*map[string]string
+	method		HttpMethod
+	contents	*string
+	param		*map[string]string
 }
 
-type httpResponse struct {
-	Header 		*map[string]string
-	Version		*string
-	StateCode	HttpStateCode
-	Contents	*[]byte
+type HttpResponse struct {
+	header 		*map[string]string
+	version		*string
+	stateCode	HttpstateCode
+	contents	[]byte
 	ContentType	string
 }
 
-func generateResponse(req *httpRequest) *httpResponse {
+func (rep *HttpResponse)Write(data string) {
+	rep.contents = append(rep.contents, []byte(data)...)
+}
+
+func (rep *HttpResponse)SetHeader(key string, value string) {
+	(*rep.header)[key] = value
+}
+
+func generateResponse(req *HttpRequest) *HttpResponse {
 	header := make(map[string]string)
 	header["Server"] = "Gopcap"
 	header["Date"] = time.Now().String()
-	return &httpResponse{
-		Header:		&header,
-		Version: 	req.Version,
+	return &HttpResponse{
+		header:		&header,
+		version: 	req.version,
 	}
 }
 
-func getStateName(state HttpStateCode) string {
+func getStateName(state HttpstateCode) string {
 	switch state {
 	case OK:
 		return "OK"
@@ -73,7 +82,7 @@ func getStateName(state HttpStateCode) string {
 	}
 }
 
-func getMethodName(method HttpMethod) string {
+func getmethodName(method HttpMethod) string {
 	switch method {
 	case GET:
 		return "GET"
@@ -86,20 +95,20 @@ func getMethodName(method HttpMethod) string {
 	}
 }
 
-func (rep *httpResponse)getBytes() []byte {
-	length := 38 + len(*rep.Contents)
-	for key,value := range *rep.Header {
+func (rep *HttpResponse)getBytes() []byte {
+	length := 38 + len(rep.contents)
+	for key,value := range *rep.header {
 		length += len(key) + len(value) + 4
 	}
 	buf := make([]byte, 0, length)
-	buf = append(buf, []byte(*rep.Version)...)
+	buf = append(buf, []byte(*rep.version)...)
 	buf = append(buf, 32)
-	buf = append(buf, []byte(strconv.Itoa(int(rep.StateCode)))...)
+	buf = append(buf, []byte(strconv.Itoa(int(rep.stateCode)))...)
 	buf = append(buf, 32)
-	buf = append(buf, []byte(getStateName(rep.StateCode))...)
+	buf = append(buf, []byte(getStateName(rep.stateCode))...)
 	buf = append(buf, CRLF...)
 	// header
-	for key,value := range *rep.Header {
+	for key,value := range *rep.header {
 		buf = append(buf, []byte(key)...)
 		buf = append(buf, SEP...)
 		buf = append(buf, []byte(value)...)
@@ -107,7 +116,7 @@ func (rep *httpResponse)getBytes() []byte {
 	}
 	buf = append(buf, CRLF...)
 	// content
-	buf = append(buf, *rep.Contents...)
+	buf = append(buf, rep.contents...)
 	return buf
 }
 
@@ -116,23 +125,28 @@ func HttpHandler(rawPacket gopacket.Packet) []byte {
 		return []byte{}
 	}
 	request := parser(rawPacket.ApplicationLayer().Payload())
-	fmt.Println(getMethodName(request.Method),*request.Url)
+	fmt.Println(getmethodName(request.method),*request.url)
 	response := generateResponse(request)
-	switch request.Method {
-	case GET:
-		GETHandler(request, response)
-	case POST:
-		POSTHandler(request, response)
-	case HEAD:
-		HEADHandler(request, response)
-	default:
-		GETHandler(request, response)
+	key := []byte(*request.url)
+	key[0] ^= uint8(request.method)
+	if handler,exist := routerMap[string(key)];exist {
+		handler(request, response)
+	} else {
+		switch request.method {
+		case GET:
+			GETHandler(request, response)
+		case POST:
+			POSTHandler(request, response)
+		case HEAD:
+			HEADHandler(request, response)
+		default:
+			GETHandler(request, response)
+		}
 	}
 	return response.getBytes()
-	//conn.WriteData(response.getBytes())
 }
 
-func parser(raw []byte) *httpRequest {
+func parser(raw []byte) *HttpRequest {
 	header := make(map[string]string)
 	idx,start := 0,0
 	key := ""
@@ -159,37 +173,34 @@ func parser(raw []byte) *httpRequest {
 		}
 	}
 	contents := string(raw[idx:])
-	request := &httpRequest{
-		Method: 	HttpMethod(raw[0]),
-		Header: 	&header,
-		Contents: 	&contents,
-		Url:		&first[1],
-		Version:	&first[2],
+	request := &HttpRequest{
+		method: 	HttpMethod(raw[0]),
+		header: 	&header,
+		contents: 	&contents,
+		url:		&first[1],
+		version:	&first[2],
 	}
 	return request
 }
 
-func GETHandler(request *httpRequest, response *httpResponse) {
-	dat, err := ioutil.ReadFile("root" + *request.Url)
-	(*response.Header)["Content-Type"] = "text/html; charset=utf-8"
+func GETHandler(request *HttpRequest, response *HttpResponse) {
+	dat, err := ioutil.ReadFile("root" + *request.url)
+	(*response.header)["Content-Type"] = "text/html; charset=utf-8"
 	if err != nil {
-		response.StateCode = NotFound
-		msg := []byte("<html>ERROR 404!</html>")
-		response.Contents = &msg
+		response.stateCode = NotFound
+		response.contents = []byte("<html>ERROR 404!</html>")
 		return
 	}
-	response.StateCode = OK
-	response.Contents = &dat
+	response.stateCode = OK
+	response.contents = dat
 }
 
-func POSTHandler(request *httpRequest, response *httpResponse) {
-	response.StateCode = OK
-	msg := []byte("POST REQUEST: " + *request.Url)
-	response.Contents = &msg
+func POSTHandler(request *HttpRequest, response *HttpResponse) {
+	response.stateCode = OK
+	response.contents = []byte("POST REQUEST: " + *request.url)
 }
 
-func HEADHandler(request *httpRequest, response *httpResponse) {
-	var msg []byte
-	response.StateCode = OK
-	response.Contents = &msg
+func HEADHandler(request *HttpRequest, response *HttpResponse) {
+	response.stateCode = OK
+	response.contents = []byte{}
 }
