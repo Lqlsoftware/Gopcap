@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// bind url router
-	gopcap.Bind("/", http.POST, rootHandler)
+	gopcap.Bind("/", http.GET, rootHandler)
 	// start server
 	gopcap.Start(8998)
 }
