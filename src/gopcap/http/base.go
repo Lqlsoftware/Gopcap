@@ -2,7 +2,6 @@ package http
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -24,31 +23,34 @@ const (
 	ServerUnavailable		HttpStateCode = 503
 )
 
-func HttpHandler(rawPacket []byte) []byte {
-	request,err := parserRequest(rawPacket)
-	if err != nil {
-		return []byte{}
+func getStateName(state HttpStateCode) string {
+	switch state {
+	case OK:
+		return "OK"
+	case BadRequest:
+		return "Bad Request"
+	case Unauthorized:
+		return "Unauthorized"
+	case InternalServerError:
+		return "Internal Server Error"
+	case ServerUnavailable:
+		return "Server Unavailable"
+	default:
+		return ""
 	}
-	fmt.Println(getmethodName(request.method),*request.url)
-	response := request.generateResponse()
-	// get router key:  url[0] ^= method -> url
-	key := []byte(*request.url)
-	key[0] ^= uint8(request.method)
-	if handler,exist := routerMap[string(key)];exist {
-		handler(request, response)
-	} else {
-		switch request.method {
-		case GET:
-			DefaultGETHandler(request, response)
-		case POST:
-			DefaultPOSTHandler(request, response)
-		case HEAD:
-			DefaultHEADHandler(request, response)
-		default:
-			DefaultGETHandler(request, response)
-		}
+}
+
+func getmethodName(method HttpMethod) string {
+	switch method {
+	case GET:
+		return "GET"
+	case POST:
+		return "POST"
+	case HEAD:
+		return "HEAD"
+	default:
+		return ""
 	}
-	return response.getBytes()
 }
 
 func parserRequest(raw []byte) (*HttpRequest,error) {
@@ -92,34 +94,4 @@ func parserRequest(raw []byte) (*HttpRequest,error) {
 	}
 	request.parseParameter()
 	return request, nil
-}
-
-func getStateName(state HttpStateCode) string {
-	switch state {
-	case OK:
-		return "OK"
-	case BadRequest:
-		return "Bad Request"
-	case Unauthorized:
-		return "Unauthorized"
-	case InternalServerError:
-		return "Internal Server Error"
-	case ServerUnavailable:
-		return "Server Unavailable"
-	default:
-		return ""
-	}
-}
-
-func getmethodName(method HttpMethod) string {
-	switch method {
-	case GET:
-		return "GET"
-	case POST:
-		return "POST"
-	case HEAD:
-		return "HEAD"
-	default:
-		return ""
-	}
 }

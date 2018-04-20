@@ -71,7 +71,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				}
 				input = append(input, tcp.Payload...)
 				fmt.Println(len(input))
-				response = http.HttpHandler(input)
+				response = http.Handler(input)
 				tcpConn.WriteData(response)
 				tcpConn.State = SENDDATA
 				timer.Reset()
