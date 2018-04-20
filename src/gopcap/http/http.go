@@ -13,15 +13,15 @@ const (
 	HEAD	HttpMethod = 72
 )
 
-type HttpstateCode uint16
+type HttpStateCode uint16
 const (
-	OK 						HttpstateCode = 200
-	BadRequest				HttpstateCode = 400
-	Unauthorized			HttpstateCode = 401
-	Forbidden				HttpstateCode = 403
-	NotFound				HttpstateCode = 404
-	InternalServerError		HttpstateCode = 500
-	ServerUnavailable		HttpstateCode = 503
+	OK 						HttpStateCode = 200
+	BadRequest				HttpStateCode = 400
+	Unauthorized			HttpStateCode = 401
+	Forbidden				HttpStateCode = 403
+	NotFound				HttpStateCode = 404
+	InternalServerError		HttpStateCode = 500
+	ServerUnavailable		HttpStateCode = 503
 )
 
 func HttpHandler(rawPacket []byte) []byte {
@@ -94,7 +94,7 @@ func parserRequest(raw []byte) (*HttpRequest,error) {
 	return request, nil
 }
 
-func getStateName(state HttpstateCode) string {
+func getStateName(state HttpStateCode) string {
 	switch state {
 	case OK:
 		return "OK"

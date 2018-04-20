@@ -11,7 +11,7 @@ var SEP = []byte{58,32}
 type HttpResponse struct {
 	header 		*map[string]string
 	version		*string
-	stateCode	HttpstateCode
+	stateCode	HttpStateCode
 	contents	[]byte
 	ContentType	string
 }
