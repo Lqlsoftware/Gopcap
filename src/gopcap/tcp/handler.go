@@ -1,6 +1,8 @@
 package tcp
 
 import (
+	"fmt"
+
 	"gopcap/http"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -37,19 +39,22 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	tcpConn := NewConnection(channel, synPacket)
 	// 超时计时器
 	timer := NewTimer(tcpTimeout)
+	var response []byte
+	var input []byte
 	for {
 		select {
 		case request := <-*tcpConn.Channel:
-			if request.TransportLayer().(*layers.TCP).Ack < tcpConn.srcSeq {
+			tcp := request.TransportLayer().(*layers.TCP)
+			if tcp.Ack < tcpConn.srcSeq {
+				tcpConn.dstAck = tcp.Ack
 				continue
 			}
 			tcpConn.Update(request)
 			switch tcpConn.State {
 			case UNCONNECT:
-				tcpLayer := request.Layer(layers.LayerTypeTCP).(*layers.TCP)
-				if tcpLayer.SYN == true {
+				if tcp.SYN {
 					tcpConn = NewConnection(channel, request)
-				} else if tcpLayer.FIN == true {
+				} else if tcp.FIN {
 					tcpConn.sendFin()
 					tcpConn.State = SENDFIN
 				}
@@ -59,25 +64,41 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				tcpConn.sendAck()
 				if request.ApplicationLayer() == nil {
 					continue
+				} else if len(tcp.Payload) == int(tcpConn.dstMSS) {
+					// 请求长度超过MSS
+					input = append(input, tcp.Payload...)
+					continue
 				}
-				response := http.HttpHandler(request)
+				input = append(input, tcp.Payload...)
+				fmt.Println(len(input))
+				response = http.HttpHandler(input)
 				tcpConn.WriteData(response)
 				tcpConn.State = SENDDATA
+				timer.Reset()
 			case SENDDATA:
 				tcpConn.sendFin()
 				tcpConn.State = SENDFIN
 			case SENDFIN:
 				tcpConn.State = WAITFINACK
 			case WAITFINACK:
-				tcpConn.dstSeq++
-				tcpConn.sendAck()
-				tcpConn.State = UNCONNECT
-				timer.Reset()
+				if tcp.FIN {
+					tcpConn.dstSeq++
+					tcpConn.sendAck()
+					tcpConn.State = UNCONNECT
+					timer.Reset()
+				}
 			}
 		}
 		if tcpConn.State == UNCONNECT {
+			// 超时关闭连接
 			if timer.Tick() {
 				return
+			}
+		} else if tcpConn.State == SENDDATA {
+			// 超时重传
+			if timer.Tick() {
+				tcpConn.Rewrite(response)
+				timer.Reset()
 			}
 		}
 	}

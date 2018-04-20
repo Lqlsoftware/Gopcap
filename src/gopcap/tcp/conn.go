@@ -1,6 +1,8 @@
 package tcp
 
 import (
+	"encoding/binary"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
@@ -16,6 +18,8 @@ type Connection struct {
 	dstPort		layers.TCPPort
 	dstMac		[]byte
 	dstSeq		uint32
+	dstAck		uint32
+	dstMSS		uint16
 	Channel		*chan gopacket.Packet
 	State		State
 }
@@ -26,6 +30,12 @@ func NewConnection(channel *chan gopacket.Packet, request gopacket.Packet) *Conn
 	reqTCP := request.Layer(layers.LayerTypeTCP).(*layers.TCP)
 	reqIP := request.Layer(layers.LayerTypeIPv4).(*layers.IPv4)
 	reqETH := request.Layer(layers.LayerTypeEthernet).(*layers.Ethernet)
+	MSS := uint16(1469)
+	for _,v := range reqTCP.Options {
+		if v.OptionType == layers.TCPOptionKindMSS {
+			MSS = binary.BigEndian.Uint16(v.OptionData)
+		}
+	}
 	// 新建连接
 	conn := &Connection{
 		srcIP:		reqIP.DstIP,
@@ -36,6 +46,7 @@ func NewConnection(channel *chan gopacket.Packet, request gopacket.Packet) *Conn
 		dstPort:	reqTCP.SrcPort,
 		dstMac:		reqETH.SrcMAC,
 		dstSeq:		reqTCP.Seq,
+		dstMSS:		MSS,
 		Channel:	channel,
 		State: 		UNCONNECT,
 	}
@@ -51,4 +62,5 @@ func (conn *Connection)Update(rawPacket gopacket.Packet) {
 	tcp := rawPacket.Layer(layers.LayerTypeTCP).(*layers.TCP)
 	conn.srcSeq = tcp.Ack
 	conn.dstSeq = tcp.Seq + uint32(len(tcp.Payload))
+	conn.dstAck = tcp.Ack
 }

@@ -23,6 +23,14 @@ func (conn *Connection)writeSlice(data []byte) {
 	conn.write(buf)
 }
 
+func (conn *Connection)Rewrite(data []byte) {
+	idx := len(data) - int(conn.srcSeq - conn.dstAck)
+	if idx < 0 || idx >= len(data) {
+		return
+	}
+	conn.writeSlice(data[idx:])
+}
+
 // 写入小于1400字节的数据
 func (conn *Connection)write(data []byte) {
 	// upper layer

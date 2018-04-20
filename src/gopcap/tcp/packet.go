@@ -8,21 +8,7 @@ import (
 
 // 发送ACK
 func (conn *Connection)sendAck() {
-	// ethernet
-	ethLayer := layers.Ethernet{
-		SrcMAC:		conn.srcMac,
-		DstMAC:		conn.dstMac,
-		EthernetType: layers.EthernetTypeIPv4,
-	}
-	// ip
-	ipLayer := layers.IPv4{
-		SrcIP:    	conn.srcIP,
-		DstIP:    	conn.dstIP,
-		TTL:	  	64,
-		Protocol: 	layers.IPProtocolTCP,
-		Version:  	4,
-		Flags:	  	2,
-	}
+	ethLayer, ipLayer := conn.getUpperLayers()
 	// tcp
 	tcpLayer := layers.TCP{
 		SrcPort: 	conn.srcPort,
@@ -32,28 +18,14 @@ func (conn *Connection)sendAck() {
 		Seq:	 	conn.srcSeq,
 		Window:  	0xFFFF,
 	}
-	tcpLayer.SetNetworkLayerForChecksum(&ipLayer)
+	tcpLayer.SetNetworkLayerForChecksum(ipLayer)
 	buf := gopacket.NewSerializeBuffer()
-	conn.writeRaw(buf, &ethLayer, &ipLayer, &tcpLayer)
+	conn.writeRaw(buf, ethLayer, ipLayer, &tcpLayer)
 }
 
 // 发送SYN
 func (conn *Connection)sendSYN() {
-	// ethernet
-	ethLayer := layers.Ethernet{
-		SrcMAC:		conn.srcMac,
-		DstMAC:		conn.dstMac,
-		EthernetType: layers.EthernetTypeIPv4,
-	}
-	// ip
-	ipLayer := layers.IPv4{
-		SrcIP:    	conn.srcIP,
-		DstIP:    	conn.dstIP,
-		TTL:	  	64,
-		Protocol: 	layers.IPProtocolTCP,
-		Version:  	4,
-		Flags:	  	2,
-	}
+	ethLayer, ipLayer := conn.getUpperLayers()
 	// tcp
 	tcpLayer := layers.TCP{
 		SrcPort: 	conn.srcPort,
@@ -64,28 +36,14 @@ func (conn *Connection)sendSYN() {
 		Window:  	0xFFFF,
 		Options:	[]layers.TCPOption{{layers.TCPOptionKindMSS,4,[]byte{5,189}}},
 	}
-	tcpLayer.SetNetworkLayerForChecksum(&ipLayer)
+	tcpLayer.SetNetworkLayerForChecksum(ipLayer)
 	buf := gopacket.NewSerializeBuffer()
-	conn.writeRaw(buf, &ethLayer, &ipLayer, &tcpLayer)
+	conn.writeRaw(buf, ethLayer, ipLayer, &tcpLayer)
 }
 
 // 发送FIN
 func (conn *Connection)sendFin() {
-	// ethernet
-	ethLayer := layers.Ethernet{
-		SrcMAC:		conn.srcMac,
-		DstMAC:		conn.dstMac,
-		EthernetType: layers.EthernetTypeIPv4,
-	}
-	// ip
-	ipLayer := layers.IPv4{
-		SrcIP:    	conn.srcIP,
-		DstIP:    	conn.dstIP,
-		TTL:	  	64,
-		Protocol: 	layers.IPProtocolTCP,
-		Version:  	4,
-		Flags:	  	2,
-	}
+	ethLayer, ipLayer := conn.getUpperLayers()
 	// tcp
 	tcpLayer := layers.TCP{
 		SrcPort: 	conn.srcPort,
@@ -96,7 +54,7 @@ func (conn *Connection)sendFin() {
 		Seq:	 	conn.srcSeq,
 		Window:  	0xFFFF,
 	}
-	tcpLayer.SetNetworkLayerForChecksum(&ipLayer)
+	tcpLayer.SetNetworkLayerForChecksum(ipLayer)
 	buf := gopacket.NewSerializeBuffer()
-	conn.writeRaw(buf, &ethLayer, &ipLayer, &tcpLayer)
+	conn.writeRaw(buf, ethLayer, ipLayer, &tcpLayer)
 }
