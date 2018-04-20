@@ -4,6 +4,7 @@ import (
 	"errors"
 )
 
+// 路由map
 var routerMap = make(map[string]func(*HttpRequest,*HttpResponse))
 
 func AddRouter(Url []byte, method HttpMethod, handler func(*HttpRequest,*HttpResponse)) error {
