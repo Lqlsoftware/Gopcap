@@ -6,31 +6,39 @@ import (
 )
 
 // TCP写入数据接口
-func (conn *Connection)WriteData(data []byte) {
-	conn.writeSlice(data)
+func (conn *Connection)WriteData(data []byte, startSeq uint32) {
+	window := conn.dstWin
+	start := conn.dstAck - startSeq
+	conn.writeSlice(data, start, window)
 }
 
 // 分段写入数据
-func (conn *Connection)writeSlice(data []byte) {
+func (conn *Connection)writeSlice(data []byte, start uint32, window uint16) {
 	// 分片发送
-	idx := 0
-	for len(data) - idx > 1400 {
-		buf := data[idx:idx + 1400]
-		conn.write(buf)
-		idx += 1400
+	end := start + uint32(window)
+	length := uint32(len(data))
+	if end > length {
+		end = length
 	}
-	buf := data[idx:]
-	conn.write(buf)
+	curr := start + 1400
+	for end - start > 0 {
+		if curr > end {
+			curr = end
+		}
+		buf := data[start:curr]
+		conn.write(buf)
+		start = curr
+		curr += 1400
+	}
 }
 
-func (conn *Connection)Rewrite(data []byte) {
+func (conn *Connection)Rewrite(data []byte, startSeq uint32) {
 	idx := len(data) - int(conn.srcSeq - conn.dstAck)
 	if idx < 0 || idx >= len(data) {
 		return
 	}
-	conn.writeSlice(data[idx:])
+	conn.WriteData(data, startSeq)
 }
-
 // 写入小于1400字节的数据
 func (conn *Connection)write(data []byte) {
 	// upper layer

@@ -20,6 +20,7 @@ type Connection struct {
 	dstSeq		uint32
 	dstAck		uint32
 	dstMSS		uint16
+	dstWin		uint16
 	Channel		*chan gopacket.Packet
 	State		State
 }
@@ -47,6 +48,7 @@ func NewConnection(channel *chan gopacket.Packet, request gopacket.Packet) *Conn
 		dstMac:		reqETH.SrcMAC,
 		dstSeq:		reqTCP.Seq,
 		dstMSS:		MSS,
+		dstWin:		reqTCP.Window,
 		Channel:	channel,
 		State: 		UNCONNECT,
 	}
@@ -63,4 +65,5 @@ func (conn *Connection)Update(rawPacket gopacket.Packet) {
 	conn.srcSeq = tcp.Ack
 	conn.dstSeq = tcp.Seq + uint32(len(tcp.Payload))
 	conn.dstAck = tcp.Ack
+	conn.dstWin = tcp.Window
 }

@@ -1,12 +1,13 @@
 package tcp
 
 import (
-	"fmt"
 
-	"gopcap/http"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
+"gopcap/http"
+
+"github.com/google/gopacket"
+"github.com/google/gopacket/layers"
+"github.com/google/gopacket/pcap"
+
 )
 
 var sendChannel *pcap.Handle
@@ -41,6 +42,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	timer := NewTimer(tcpTimeout)
 	var response []byte
 	var input []byte
+	var startSeq uint32
 	for {
 		select {
 		case request := <-*tcpConn.Channel:
@@ -70,14 +72,18 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 					continue
 				}
 				input = append(input, tcp.Payload...)
-				fmt.Println(len(input))
 				response = http.Handler(input)
-				tcpConn.WriteData(response)
+				startSeq = tcpConn.srcSeq
+				tcpConn.WriteData(response, startSeq)
 				tcpConn.State = SENDDATA
 				timer.Reset()
 			case SENDDATA:
-				tcpConn.sendFin()
-				tcpConn.State = SENDFIN
+				if tcpConn.dstAck >= startSeq + uint32(len(response)) {
+					tcpConn.sendFin()
+					tcpConn.State = SENDFIN
+				} else {
+					tcpConn.WriteData(response, startSeq)
+				}
 			case SENDFIN:
 				tcpConn.State = WAITFINACK
 			case WAITFINACK:
@@ -97,7 +103,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 		} else if tcpConn.State == SENDDATA {
 			// 超时重传
 			if timer.Tick() {
-				tcpConn.Rewrite(response)
+				tcpConn.Rewrite(response, startSeq)
 				timer.Reset()
 			}
 		}
