@@ -40,10 +40,8 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	tcpConn := NewConnection(channel, synPacket)
 	// 超时计时器
 	timer := NewTimer(tcpTimeout)
-	var response []byte
-	var input []byte
-	var startSeq uint32
-	var last = uint32(0)
+	var response, input []byte
+	var startSeq, last = uint32(0), uint32(0)
 	for {
 		select {
 		case request := <-*tcpConn.Channel:
