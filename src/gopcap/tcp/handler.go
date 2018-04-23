@@ -43,12 +43,17 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	var response []byte
 	var input []byte
 	var startSeq uint32
+	var last = uint32(0)
 	for {
 		select {
 		case request := <-*tcpConn.Channel:
 			tcp := request.TransportLayer().(*layers.TCP)
 			if tcp.Ack < tcpConn.srcSeq {
+				if tcp.Ack == last {
+					tcpConn.srcSeq = tcp.Ack
+				}
 				tcpConn.dstAck = tcp.Ack
+				tcpConn.dstWin = tcp.Window
 				continue
 			}
 			tcpConn.Update(request)
@@ -79,6 +84,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				timer.Reset()
 			case SENDDATA:
 				if tcpConn.dstAck >= startSeq + uint32(len(response)) {
+					response = []byte{}
 					tcpConn.sendFin()
 					tcpConn.State = SENDFIN
 				} else {

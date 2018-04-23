@@ -25,8 +25,8 @@ func (conn *Connection)writeSlice(data []byte, start uint32, window uint16) {
 		if curr > end {
 			curr = end
 		}
-		buf := data[start:curr]
-		conn.write(buf)
+		conn.write(data[start:curr])
+		conn.srcSeq += uint32(curr - start)
 		start = curr
 		curr += 1400
 	}
@@ -51,7 +51,6 @@ func (conn *Connection)write(data []byte) {
 	err := appLayer.SerializeTo(buf, gopacket.SerializeOptions{false,false})
 	check(err)
 	conn.writeRaw(buf, ethLayer, ipLayer, tcpLayer)
-	conn.srcSeq += uint32(len(data))
 }
 
 // 封装TCP/IP/以太网包并发送
