@@ -2,10 +2,13 @@ package http
 
 import "fmt"
 
-func Handler(rawPacket []byte) []byte {
+func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
 	request,err := parserRequest(rawPacket)
 	if err != nil {
-		return []byte{}
+		return []byte{}, false
+	}
+	if (*request.header)["Connection"] == "keep-alive" {
+		isKeepAlive = true
 	}
 	fmt.Println(getmethodName(request.method),*request.url)
 	response := request.generateResponse()
@@ -26,5 +29,5 @@ func Handler(rawPacket []byte) []byte {
 			DefaultGETHandler(request, response)
 		}
 	}
-	return response.getBytes()
+	return response.getBytes(), isKeepAlive
 }

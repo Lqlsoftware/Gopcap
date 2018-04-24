@@ -37,6 +37,8 @@ func (rep *HttpResponse)SetHeader(key string, value string) {
 
 // response变成字节流
 func (rep *HttpResponse)getBytes() []byte {
+	(*rep.header)["Content-Length"] = strconv.Itoa(len(rep.contents))
+	(*rep.header)["Conntion"] = "keep-alive"
 	// 计算byte总共长度 防止append申请内存拷贝
 	length := 38 + len(rep.contents)
 	for key,value := range *rep.header {

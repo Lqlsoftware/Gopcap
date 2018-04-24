@@ -7,7 +7,7 @@ import (
 
 // TCP写入数据接口
 func (conn *Connection)WriteData(data []byte, startSeq uint32) {
-	window := conn.dstWin
+	window := conn.dstWin - 10
 	start := conn.dstAck - startSeq
 	conn.writeSlice(data, start, window)
 }
