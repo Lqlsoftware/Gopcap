@@ -1,6 +1,22 @@
 package http
 
-import "strings"
+type HttpMethod uint8
+const (
+	GET 	HttpMethod = 71
+	POST	HttpMethod = 80
+	HEAD	HttpMethod = 72
+)
+
+type HttpStateCode uint16
+const (
+	OK 						HttpStateCode = 200
+	BadRequest				HttpStateCode = 400
+	Unauthorized			HttpStateCode = 401
+	Forbidden				HttpStateCode = 403
+	NotFound				HttpStateCode = 404
+	InternalServerError		HttpStateCode = 500
+	ServerUnavailable		HttpStateCode = 503
+)
 
 var typeMap = map[string]string{
 	".001" : "application/x-001",
@@ -330,17 +346,4 @@ var typeMap = map[string]string{
 	".ipa" : "application/vnd.iphone",
 	".apk" : "application/vnd.android.package-archive",
 	".xap" : "application/x-silverlight-app",
-}
-
-func getContentType(fileName string) string {
-	idx := strings.IndexByte(fileName, '.')
-	if idx < 0 {
-		return "application/octet-stream"
-	}
-	ct := fileName[idx:]
-	if res,ok := typeMap[ct];ok {
-		return res
-	} else {
-		return "application/octet-stream"
-	}
 }
