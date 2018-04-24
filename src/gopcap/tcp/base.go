@@ -2,6 +2,7 @@ package tcp
 
 const tcpTimeout = 200
 
+// TCP State
 type State uint8
 const (
 	UNCONNECT	State = 0
@@ -15,6 +16,7 @@ const (
 	WAITFINACK	State = 9
 )
 
+// 错误处理
 func check(err error) {
 	if err != nil {
 		panic(err)

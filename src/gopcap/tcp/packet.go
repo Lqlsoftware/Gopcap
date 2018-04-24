@@ -58,3 +58,50 @@ func (conn *Connection)sendFin() {
 	buf := gopacket.NewSerializeBuffer()
 	conn.writeRaw(buf, ethLayer, ipLayer, &tcpLayer)
 }
+
+// 发送默认ACK
+func sendAck(packet gopacket.Packet) {
+	// TCP层
+	reqTCP := packet.Layer(layers.LayerTypeTCP).(*layers.TCP)
+	// IP层
+	reqIP := packet.Layer(layers.LayerTypeIPv4).(*layers.IPv4)
+	// 以太网层
+	reqETH := packet.Layer(layers.LayerTypeEthernet).(*layers.Ethernet)
+
+	// 生成ACK 以太网层
+	ethLayer := layers.Ethernet{
+		SrcMAC:       reqETH.DstMAC,
+		DstMAC:       reqETH.SrcMAC,
+		EthernetType: layers.EthernetTypeIPv4,
+	}
+
+	// 生成ACK IP层
+	ipLayer := layers.IPv4{
+		SrcIP:    reqIP.DstIP,
+		DstIP:    reqIP.SrcIP,
+		TTL:      64,
+		Protocol: layers.IPProtocolTCP,
+		Version:  4,
+		Flags:    2,
+	}
+
+	// 生成ACK TCP层
+	tcpLayer := layers.TCP{
+		SrcPort: 	reqTCP.DstPort,
+		DstPort: 	reqTCP.SrcPort,
+		ACK:	 	true,
+		Ack:	 	reqTCP.Seq + 1,
+		Seq:	 	reqTCP.Ack,
+		Window:  	0xFFFF,
+	}
+	tcpLayer.SetNetworkLayerForChecksum(&ipLayer)
+	buf := gopacket.NewSerializeBuffer()
+	err := tcpLayer.SerializeTo(buf, gopacket.SerializeOptions{true,true})
+	check(err)
+	err = ipLayer.SerializeTo(buf, gopacket.SerializeOptions{true,true})
+	check(err)
+	err = ethLayer.SerializeTo(buf, gopacket.SerializeOptions{false,true})
+	check(err)
+	err = sendChannel.WritePacketData(buf.Bytes())
+	check(err)
+}

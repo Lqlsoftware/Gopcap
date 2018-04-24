@@ -5,8 +5,8 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-// TCP写入数据接口
-func (conn *Connection)WriteData(data []byte, startSeq uint32) {
+// TCP写入数据接口 每次最多发送接收方窗口大小的数据
+func (conn *Connection)WriteWindow(data []byte, startSeq uint32) {
 	window := conn.dstWin - 10
 	start := conn.dstAck - startSeq
 	conn.writeSlice(data, start, window)
@@ -32,14 +32,16 @@ func (conn *Connection)writeSlice(data []byte, start uint32, window uint16) {
 	}
 }
 
+// 重发数据
 func (conn *Connection)Rewrite(data []byte, startSeq uint32) {
 	idx := len(data) - int(conn.srcSeq - conn.dstAck)
 	if idx < 0 || idx >= len(data) {
 		return
 	}
-	conn.WriteData(data, startSeq)
+	conn.WriteWindow(data, startSeq)
 }
-// 写入小于1400字节的数据
+
+// TCP发送小于1400字节的数据
 func (conn *Connection)write(data []byte) {
 	// upper layer
 	ethLayer, ipLayer := conn.getUpperLayers()

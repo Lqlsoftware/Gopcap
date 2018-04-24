@@ -1,5 +1,5 @@
 # Gopcap
-A web server based on pcap TCP layer.
+A HTTP web server based on pcap TCP layer.
 
 ## Install:
 
