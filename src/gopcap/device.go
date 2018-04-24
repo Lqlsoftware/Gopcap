@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// 自动选择网络适配器
 func getAdapter() *pcap.Interface {
 	adapters,err := pcap.FindAllDevs()
 	check(err)
@@ -15,6 +16,11 @@ func getAdapter() *pcap.Interface {
 		}
 	}
 	fmt.Println("Select Devices:",adapters[idx].Name)
-	fmt.Println("Address:",adapters[idx].Addresses[len(adapters[idx].Addresses) - 1].IP)
+	// 输出IPv4地址
+	for _,v := range adapters[idx].Addresses {
+		if len(v.IP) == 4 {
+			fmt.Println("Address:",v.IP)
+		}
+	}
 	return &adapters[idx]
 }

@@ -18,13 +18,16 @@ func listen(adapter *pcap.Interface, port layers.TCPPort) {
 	tcp.SetSendChannel(handle)
 	defer handle.Close()
 	check(err)
+
 	// 设置过滤器
 	err = handle.SetBPFFilter("tcp and dst port " + strconv.Itoa(int(port)))
 	check(err)
+
 	// 建立数据源
 	src := gopacket.NewPacketSource(handle, handle.LinkType())
 	checkNil(src)
 	in := src.Packets()
+
 	// 监听启动
 	fmt.Print("Start listening Port:", port, "\n\n")
 	for true {

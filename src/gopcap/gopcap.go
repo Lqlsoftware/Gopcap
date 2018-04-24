@@ -1,10 +1,12 @@
 package gopcap
 
 import (
-	"github.com/google/gopacket/layers"
 	"gopcap/http"
+
+	"github.com/google/gopacket/layers"
 )
 
+// 启动服务器
 func Start(port layers.TCPPort)  {
 	// 选择适配器
 	adapter := getAdapter()
@@ -12,12 +14,13 @@ func Start(port layers.TCPPort)  {
 	listen(adapter, port)
 }
 
-// dymatic bind
+// 绑定URL
 func Bind(Url string, method http.HttpMethod, handler func(*http.HttpRequest,*http.HttpResponse)) {
 	err := http.AddRouter([]byte(Url), method, handler)
 	check(err)
 }
 
+// 解绑URL
 func DeBind(Url string, method http.HttpMethod) {
 	err := http.RemoveRouter([]byte(Url), method)
 	check(err)
