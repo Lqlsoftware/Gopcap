@@ -2,7 +2,7 @@ package http
 
 import "errors"
 
-// unescape unescapes a string
+// unescape a string
 func unescape(s string) (string, error) {
 	// Count %, check that they're well-formed.
 	n := 0
