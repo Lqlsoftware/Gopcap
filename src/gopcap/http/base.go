@@ -59,7 +59,10 @@ func parserRequest(raw []byte) (*HttpRequest,error) {
 	if len(first) < 3 {
 		return nil,errors.New("ERROR: UNKNOWN HTTP CONTENT")
 	}
-	url := first[1]
+	url, err := Unescape(first[1])
+	if err != nil {
+		return nil,errors.New("ERROR: UNKNOWN HTTP URL ENCODE")
+	}
 	version := first[2]
 	idx += 2
 	start = idx
