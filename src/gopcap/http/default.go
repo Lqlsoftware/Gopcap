@@ -2,6 +2,8 @@ package http
 
 import "io/ioutil"
 
+// Default GET method
+// 		root/URL
 func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
 	dat, err := ioutil.ReadFile("root" + *request.url)
 	if err != nil {
@@ -14,11 +16,13 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
 	response.contents = dat
 }
 
+// Default POST method
 func DefaultPOSTHandler(request *HttpRequest, response *HttpResponse) {
 	response.stateCode = OK
 	response.contents = []byte("POST REQUEST: " + *request.url)
 }
 
+// Default HEAD method
 func DefaultHEADHandler(request *HttpRequest, response *HttpResponse) {
 	response.stateCode = OK
 	response.contents = []byte{}

@@ -3,7 +3,7 @@ package http
 import "errors"
 
 // unescape unescapes a string
-func Unescape(s string) (string, error) {
+func unescape(s string) (string, error) {
 	// Count %, check that they're well-formed.
 	n := 0
 	for i := 0; i < len(s); {
@@ -43,7 +43,7 @@ func Unescape(s string) (string, error) {
 	return string(t), nil
 }
 
-
+// 判断字符是否为16进制数
 func ishex(c byte) bool {
 	switch {
 	case '0' <= c && c <= '9':
@@ -56,6 +56,7 @@ func ishex(c byte) bool {
 	return false
 }
 
+// 16进制数字符 -> 10进制数
 func unhex(c byte) byte {
 	switch {
 	case '0' <= c && c <= '9':

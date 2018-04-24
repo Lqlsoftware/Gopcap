@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// 获取请求文件的对应ContentType
 func getContentType(fileName string) string {
 	idx := strings.IndexByte(fileName, '.')
 	if idx < 0 {
@@ -18,6 +19,7 @@ func getContentType(fileName string) string {
 	}
 }
 
+// 获取HTTP对应状态码的字符串
 func getStateName(state HttpStateCode) string {
 	switch state {
 	case OK:
@@ -35,6 +37,7 @@ func getStateName(state HttpStateCode) string {
 	}
 }
 
+// 获取HTTP请求类型的字符串
 func getmethodName(method HttpMethod) string {
 	switch method {
 	case GET:
@@ -48,10 +51,11 @@ func getmethodName(method HttpMethod) string {
 	}
 }
 
+// 将TCP交付的HTTP数据包进行解析 返回HTTPREQUEST
 func parserRequest(raw []byte) (*HttpRequest,error) {
-	header := make(map[string]string)
+	// REQUEST
+	// 		METHOD URL HTTP-VERSION
 	idx,start := 0,0
-	key := ""
 	for idx < len(raw) && raw[idx] != 13 {
 		idx++
 	}
@@ -59,13 +63,19 @@ func parserRequest(raw []byte) (*HttpRequest,error) {
 	if len(first) < 3 {
 		return nil,errors.New("ERROR: UNKNOWN HTTP CONTENT")
 	}
-	url, err := Unescape(first[1])
+	// 中文URL UNESCAPE
+	url, err := unescape(first[1])
 	if err != nil {
 		return nil,errors.New("ERROR: UNKNOWN HTTP URL ENCODE")
 	}
 	version := first[2]
+
+	// REQUEST-HEADER
+	// 		Connection: keep-alive
 	idx += 2
 	start = idx
+	header := make(map[string]string)
+	var key string
 	for idx < len(raw) {
 		if v := raw[idx];v == 13 {
 			if idx <= start {
@@ -82,7 +92,11 @@ func parserRequest(raw []byte) (*HttpRequest,error) {
 			idx++
 		}
 	}
+
+	// REQUEST-CONTENT
 	contents := string(raw[idx:])
+
+	// Generate request
 	request := &HttpRequest{
 		method: 	HttpMethod(raw[0]),
 		header: 	&header,
@@ -90,6 +104,9 @@ func parserRequest(raw []byte) (*HttpRequest,error) {
 		url:		&url,
 		version:	&version,
 	}
+
+	// Parse request parameter
 	request.parseParameter()
+
 	return request, nil
 }

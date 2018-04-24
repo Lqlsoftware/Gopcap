@@ -5,12 +5,19 @@ import (
 	"time"
 )
 
+// HTTP请求
 type HttpRequest struct {
+	// URL
 	url			*string
+	// HTTP-Version
 	version		*string
+	// HTTP-Header
 	header 		*map[string]string
+	// HTTP-Method
 	method		HttpMethod
+	// HTTP-Content
 	contents	*string
+	// Param
 	param		*map[string]string
 }
 
@@ -28,6 +35,7 @@ func (req *HttpRequest)GetAllParamKey() []string {
 	return res
 }
 
+// 根据REQUEST产生默认RESPONSE
 func (req *HttpRequest)generateResponse() *HttpResponse {
 	header := make(map[string]string)
 	header["Server"] = "Gopcap"
@@ -38,6 +46,7 @@ func (req *HttpRequest)generateResponse() *HttpResponse {
 	}
 }
 
+// 处理REQUEST参数
 func (req *HttpRequest)parseParameter() {
 	parameter := make(map[string]string)
 	switch req.method {

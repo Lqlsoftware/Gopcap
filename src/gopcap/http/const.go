@@ -1,5 +1,7 @@
 package http
 
+// HttpMethod
+// 		GET POST HEAD
 type HttpMethod uint8
 const (
 	GET 	HttpMethod = 71
@@ -7,6 +9,7 @@ const (
 	HEAD	HttpMethod = 72
 )
 
+// HttpStateCode
 type HttpStateCode uint16
 const (
 	OK 						HttpStateCode = 200
@@ -18,6 +21,7 @@ const (
 	ServerUnavailable		HttpStateCode = 503
 )
 
+// Content-Type Map
 var typeMap = map[string]string{
 	".001" : "application/x-001",
 	".301" : "application/x-301",
