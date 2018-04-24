@@ -28,6 +28,7 @@ func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
 	// 查找URL路由表
 	if handler,exist := routerMap[string(key)];exist {
 		handler(request, response)
+		response.stateCode = OK
 	} else {
 		switch request.method {
 		case GET:
