@@ -29,7 +29,7 @@ func listen(adapter *pcap.Interface, port layers.TCPPort) {
 	in := src.Packets()
 
 	// 监听启动
-	log.Print("Start listening Port: ", port, "\n\n")
+	log.Print("Port: ", port, "\n\n")
 	for true {
 		select {
 		case packet := <-in:

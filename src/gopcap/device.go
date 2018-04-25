@@ -15,11 +15,10 @@ func getAdapter() *pcap.Interface {
 			break
 		}
 	}
-	log.Print("Devices: ",adapters[idx].Name)
 	// 输出IPv4地址
 	for _,v := range adapters[idx].Addresses {
 		if len(v.IP) == 4 {
-			log.Print("IPv4:    ",v.IP)
+			log.Print("IPv4: ",v.IP)
 		}
 	}
 	return &adapters[idx]
