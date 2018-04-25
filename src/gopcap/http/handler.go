@@ -5,11 +5,11 @@ import (
 )
 
 // HTTP包处理
-func Handler(rawPacket []byte) (rep ResponseByte, isKeepAlive bool) {
+func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
 	// 转换TCP交付的包为HTTP-REQUEST
 	request,err := parserRequest(rawPacket)
 	if err != nil {
-		return ResponseByte{[]byte{}, nil}, false
+		return []byte{}, false
 	}
 
 	// 判断是否keep-alive
