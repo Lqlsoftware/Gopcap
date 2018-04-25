@@ -33,9 +33,6 @@ func PacketHandler(packet gopacket.Packet) {
 	} else if tcpLayer.SYN {
 		// 建立新线程进行TCP连接
 		go handleThread(packet, tcpLayer.SrcPort)
-	} else {
-		// 发送默认ACK
-		sendAck(packet)
 	}
 }
 
