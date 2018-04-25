@@ -8,7 +8,7 @@ import (
 )
 
 var chMap = make(map[layers.TCPPort]chan gopacket.Packet)
-var useMap *sync.RWMutex
+var useMap = new(sync.RWMutex)
 
 // 创建并加入Map
 func addChannel(key layers.TCPPort) *chan gopacket.Packet {
