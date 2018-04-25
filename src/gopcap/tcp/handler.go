@@ -50,7 +50,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 
 	// 状态变量设置
 	var response, input []byte
-	var startSeq, last = uint32(0), uint32(0)
+	var startSeq, last, previous = uint32(0), uint32(0), uint32(0)
 	var isKeepAlive bool
 
 	// 处理后续TCP包
@@ -75,10 +75,16 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				tcpConn.State = SENDFIN
 				continue
 			} else if tcp.Ack < tcpConn.srcSeq {
+				// 忽略连续重传请求
+				if tcp.Ack == last && last == previous {
+					continue
+				}
 				// 小于当前发送序号 且是第二次ACK
 				if tcp.Ack == last {
 					tcpConn.srcSeq = tcp.Ack
 				}
+				previous = last
+				last = tcp.Ack
 				tcpConn.dstAck = tcp.Ack
 				tcpConn.dstWin = tcp.Window
 				continue
@@ -144,6 +150,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				} else {
 					// 继续发送数据
 					tcpConn.WriteWindow(response, startSeq)
+					timer.Reset()
 				}
 
 			// 发送FIN

@@ -9,7 +9,7 @@ func main() {
 	// bind url router
 	gopcap.Bind("/", http.GET, rootHandler)
 	// start server
-	gopcap.Start(80)
+	gopcap.Start(8998)
 }
 
 func rootHandler(req *http.HttpRequest, rep *http.HttpResponse) {
