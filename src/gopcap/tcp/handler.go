@@ -24,9 +24,12 @@ func PacketHandler(packet gopacket.Packet) {
 	tcpLayer := packet.Layer(layers.LayerTypeTCP).(*layers.TCP)
 
 	// 处理请求 端口通道存在
-	if _,ok := chMap[tcpLayer.SrcPort];ok {
+	useMap.RLock()
+	ch,ok := chMap[tcpLayer.SrcPort]
+	useMap.RUnlock()
+	if ok {
 		// 发送至相应端口通道
-		chMap[tcpLayer.SrcPort]<- packet
+		ch<- packet
 	} else if tcpLayer.SYN {
 		// 建立新线程进行TCP连接
 		go handleThread(packet, tcpLayer.SrcPort)
