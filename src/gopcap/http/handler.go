@@ -1,13 +1,15 @@
 package http
 
-import "fmt"
+import (
+	"log"
+)
 
 // HTTP包处理
-func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
+func Handler(rawPacket []byte) (rep ResponseByte, isKeepAlive bool) {
 	// 转换TCP交付的包为HTTP-REQUEST
 	request,err := parserRequest(rawPacket)
 	if err != nil {
-		return []byte{}, false
+		return ResponseByte{[]byte{}, nil}, false
 	}
 
 	// 判断是否keep-alive
@@ -16,7 +18,7 @@ func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
 	}
 
 	// 控制台log请求内容
-	fmt.Println(getmethodName(request.method),*request.url)
+	log.Println(getmethodName(request.method),*request.url)
 
 	// 生成HTTP-RESPONSE
 	response := request.generateResponse()
@@ -41,5 +43,6 @@ func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
 			DefaultGETHandler(request, response)
 		}
 	}
+
 	return response.getBytes(), isKeepAlive
 }

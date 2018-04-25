@@ -2,7 +2,7 @@ package gopcap
 
 import (
 	"github.com/google/gopacket/pcap"
-	"fmt"
+	"log"
 )
 
 // 自动选择网络适配器
@@ -15,11 +15,11 @@ func getAdapter() *pcap.Interface {
 			break
 		}
 	}
-	fmt.Println("Select Devices:",adapters[idx].Name)
+	log.Print("Devices: ",adapters[idx].Name)
 	// 输出IPv4地址
 	for _,v := range adapters[idx].Addresses {
 		if len(v.IP) == 4 {
-			fmt.Println("Address:",v.IP)
+			log.Print("IPv4:    ",v.IP)
 		}
 	}
 	return &adapters[idx]
