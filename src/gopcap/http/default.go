@@ -10,34 +10,59 @@ import (
 // Default GET method
 // 		root/URL
 func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
-	dat, err := ioutil.ReadFile("root" + *request.url)
-	if err != nil {
-		response.stateCode = NotFound
-		response.contents = []byte("<html>ERROR 404!</html>")
-		return
-	}
+	isGzip := false
+	cachePath := "root/_temp" + *request.url
 
-	// gzip 压缩
+	// 检查支持 gzip 压缩
 	if encoding,ok := (*request.header)["Accept-Encoding"];ok {
 		encodes := strings.Split(encoding, ", ")
 		// 检查浏览器是否支持gzip压缩
 		for _,v := range encodes {
 			// 支持gzip压缩
 			if v == "gzip" {
-				// 压缩数据
-				var b bytes.Buffer
-				w := gzip.NewWriter(&b)
-				w.Write(dat)
-				w.Flush()
-				dat = b.Bytes()
-
-				// 设置返回header 通知浏览器压缩格式
-				(*response.header)["Content-Encoding"] = "gzip"
+				isGzip = true
 				break
 			}
 		}
 	}
 
+	// 检查缓存是否有已压缩文件
+	var dat []byte
+	var err error
+	if isGzip && checkFileIsExist(cachePath) {
+		// 设置返回header 通知浏览器压缩格式
+		(*response.header)["Content-Encoding"] = "gzip"
+
+		// 直接返回缓存数据
+		dat,err = ioutil.ReadFile(cachePath)
+	} else {
+		// 读入文件
+		dat, err = ioutil.ReadFile("root" + *request.url)
+		if err != nil {
+			response.stateCode = NotFound
+			response.contents = []byte("<html>ERROR 404!</html>")
+			return
+		}
+
+		// gzip 压缩
+		if isGzip {
+			// 设置返回header 通知浏览器压缩格式
+			(*response.header)["Content-Encoding"] = "gzip"
+
+			// 压缩数据
+			var b bytes.Buffer
+			w := gzip.NewWriter(&b)
+			w.Write(dat)
+			w.Flush()
+			dat = b.Bytes()
+
+			// 检查是否为静态text类文件
+			if checkType(*request.url) {
+				// 缓存
+				ioutil.WriteFile(cachePath, dat, 0666)
+			}
+		}
+	}
 	// 设置Content-Type
 	(*response.header)["Content-Type"] = getContentType(*request.url) + "; charset=utf-8"
 	response.stateCode = OK
