@@ -1,6 +1,8 @@
 package gopcap
 
 import (
+	"log"
+
 	"gopcap/http"
 
 	"github.com/google/gopacket/layers"
@@ -8,6 +10,7 @@ import (
 
 // 启动服务器
 func Start(port layers.TCPPort)  {
+	log.SetPrefix("[Gopcap] ")
 	// 选择适配器
 	adapter := getAdapter()
 	// 开启TCP端口监听

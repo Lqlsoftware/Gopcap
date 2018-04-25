@@ -1,8 +1,6 @@
 package http
 
-import (
-	"log"
-)
+import "log"
 
 // HTTP包处理
 func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
@@ -16,9 +14,6 @@ func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
 	if (*request.header)["Connection"] == "keep-alive" {
 		isKeepAlive = true
 	}
-
-	// 控制台log请求内容
-	log.Println(getmethodName(request.method),*request.url)
 
 	// 生成HTTP-RESPONSE
 	response := request.generateResponse()
@@ -44,5 +39,7 @@ func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
 		}
 	}
 
+	// 控制台log请求内容
+	log.Println("|",response.stateCode,"|",getmethodName(request.method),*request.url)
 	return response.getBytes(), isKeepAlive
 }
