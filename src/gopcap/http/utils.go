@@ -14,6 +14,6 @@ func checkFileIsExist(filename string) bool {
 
 func checkType(url string) bool {
 	ct := getContentType(url)
-	ok,_ := regexp.MatchString("^text/|application/\\d*\\D*$", ct)
+	ok,_ := regexp.MatchString("text/|application/", ct)
 	return ok
 }
