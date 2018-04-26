@@ -94,7 +94,11 @@ func parserRequest(raw []byte) (*HttpRequest,error) {
 	}
 
 	// REQUEST-CONTENT
-	contents := string(raw[idx:])
+	var contents string
+	if idx < len(raw) {
+		contents = string(raw[idx:])
+	}
+
 
 	// Generate request
 	request := &HttpRequest{
