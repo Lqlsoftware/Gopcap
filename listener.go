@@ -4,7 +4,7 @@ import (
 	"log"
 	"strconv"
 
-	"gopcap/tcp"
+	"github.com/Lqlsoftware/gopcap/tcp"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"

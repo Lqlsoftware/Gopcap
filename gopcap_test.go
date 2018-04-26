@@ -1,16 +1,19 @@
 package gopcap
 
 import (
-	"github.com/Lqlsoftware/Gopcap/http"
+	"testing"
+
+	"github.com/Lqlsoftware/gopcap/http"
 )
 
-func TestStart() {
+func TestServer(t *testing.T) {
 	// bind url router
 	Bind("/helloWorld", http.GET, rootHandler)
 	// start server
 	Start(80)
 }
 
+// example handler
 func rootHandler(req *http.HttpRequest, rep *http.HttpResponse) {
 	rep.Write("Hello World!\n")
 	for _,v := range req.GetAllParamKey() {

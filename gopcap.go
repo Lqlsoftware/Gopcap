@@ -3,7 +3,7 @@ package gopcap
 import (
 	"log"
 
-	"gopcap/http"
+	"github.com/Lqlsoftware/gopcap/http"
 
 	"github.com/google/gopacket/layers"
 )

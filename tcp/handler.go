@@ -1,7 +1,7 @@
 package tcp
 
 import (
-	"gopcap/http"
+	"github.com/Lqlsoftware/gopcap/http"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
