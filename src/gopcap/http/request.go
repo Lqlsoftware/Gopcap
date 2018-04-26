@@ -69,6 +69,9 @@ func (req *HttpRequest)parseParameter() {
 			param := strings.Split(*req.contents, "&")
 			for _,v := range param {
 				idx := strings.IndexByte(v,'=')
+				if idx < 0 {
+					return
+				}
 				key := v[:idx]
 				value := v[idx + 1:]
 				parameter[key] = value
