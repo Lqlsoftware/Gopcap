@@ -17,7 +17,7 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
 		return
 	} else if strings.HasSuffix(*request.url,"/") {
 		response.stateCode = Forbidden
-		response.contents = []byte("<html>Forbidden 403!</html>")
+		response.contents = []byte(page403)
 		return
 	}
 
