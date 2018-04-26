@@ -1,16 +1,15 @@
-package gopcap
+package main
 
 import (
-	"testing"
-
+	"github.com/Lqlsoftware/gopcap"
 	"github.com/Lqlsoftware/gopcap/http"
 )
 
-func TestServer(t *testing.T) {
+func main() {
 	// bind url router
-	Bind("/helloWorld", http.GET, rootHandler)
+	gopcap.Bind("/helloWorld", http.GET, rootHandler)
 	// start server
-	Start(80)
+	gopcap.Start(80)
 }
 
 // example handler
