@@ -17,8 +17,8 @@ import (
 )
 
 func main() {
-	gopcap.Bind("/", http.GET, handler)
-	gopcap.Start(80) // serve on 80 port(http)
+    gopcap.Bind("/", http.GET, handler)
+    gopcap.Start(80) // serve on 80 port(http)
 }
 
 func handler(req *http.HttpRequest, rep *http.HttpResponse) {
