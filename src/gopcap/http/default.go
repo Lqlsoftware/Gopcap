@@ -10,6 +10,17 @@ import (
 // Default GET method
 // 		root/URL
 func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
+	// 检查URL
+	if *request.url == "/" {
+		response.stateCode = OK
+		response.contents = []byte(defaultIndex)
+		return
+	} else if strings.HasSuffix(*request.url,"/") {
+		response.stateCode = Forbidden
+		response.contents = []byte("<html>Forbidden 403!</html>")
+		return
+	}
+
 	isGzip := false
 	cachePath := "root/_temp" + *request.url
 
@@ -40,7 +51,7 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
 		dat, err = ioutil.ReadFile("root" + *request.url)
 		if err != nil {
 			response.stateCode = NotFound
-			response.contents = []byte("<html>ERROR 404!</html>")
+			response.contents = []byte(page404)
 			return
 		}
 
