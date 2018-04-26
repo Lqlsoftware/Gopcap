@@ -17,11 +17,7 @@
 .DS_Store
 
 # test html & css & js & image
-root/
+example/root/
 
 # Goland configue file
 .idea/
-
-# Go Binaries
-bin/
-pkg/
