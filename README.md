@@ -53,8 +53,6 @@ gopcap.Bind("/", http.GET, handler)
 ``` go
 gopcap.Start(80)
 ```
-- Create folder `root` in your project output and put static html in it.
-```sh
-$ mkdir root
-```
 - Run your project and enjoy!
+
+- Put static html file in `root` folder (generate automaticly).
