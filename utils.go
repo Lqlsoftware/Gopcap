@@ -1,6 +1,11 @@
 package gopcap
 
-import "os"
+import (
+	"net"
+	"os"
+
+	"github.com/google/gopacket/pcap"
+)
 
 func check(err error) {
 	if err != nil {
@@ -20,4 +25,13 @@ func checkDirIsExist(filename string) bool {
 		return false
 	}
 	return true
+}
+
+func getIPV4(adapter *pcap.Interface) net.IP {
+	for _,v := range adapter.Addresses {
+		if len(v.IP) == 4 {
+			return v.IP
+		}
+	}
+	return net.IPv4(0,0,0,0)
 }

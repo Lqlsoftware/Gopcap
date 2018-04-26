@@ -20,7 +20,7 @@ func listen(adapter *pcap.Interface, port layers.TCPPort) {
 	check(err)
 
 	// 设置过滤器
-	err = handle.SetBPFFilter("tcp and dst port " + strconv.Itoa(int(port)))
+	err = handle.SetBPFFilter("tcp and dst port " + strconv.Itoa(int(port)) + " and ip dst " + getIPV4(adapter).String())
 	check(err)
 
 	// 建立数据源

@@ -16,10 +16,6 @@ func getAdapter() *pcap.Interface {
 		}
 	}
 	// 输出IPv4地址
-	for _,v := range adapters[idx].Addresses {
-		if len(v.IP) == 4 {
-			log.Print("IPv4: ",v.IP)
-		}
-	}
+	log.Print("IPv4: ", getIPV4(&adapters[idx]))
 	return &adapters[idx]
 }
