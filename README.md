@@ -1,45 +1,60 @@
 # Gopcap
 A Multithreading HTTP web server based on pcap TCP layer.
 
-## Install
+## Quick start
 
-    go get github.com/Lqlsoftware/Gopcap
-
-## Complie
-Include Gopcap in your $GOPATH.
-``` bash
-export GOPATH=$GOPATH:(your go get dir)/github.com/Lqlsoftware/Gopcap
+```sh
+# assume the following codes in main.go file
+$ cat main.go
 ```
-then
 
-    go build gopcap
-    go build main.go (Optional.) 
+```go
+package main
 
-## Usage
-Put static html to "./root/".
+import (
+    "github.com/Lqlsoftware/gopcap"
+    "github.com/Lqlsoftware/gopcap/http"
+)
 
-    go run main.go
-    or
-    ./main
+func main() {
+	gopcap.Bind("/", http.GET, handler)
+	gopcap.Start(80) // serve on 80 port(http)
+}
 
----
-## Develop
-Import gopcap package:
+func handler(req *http.HttpRequest, rep *http.HttpResponse) {
+    rep.Write("Hello World!\n")
+}
+```
+
+```
+# run main.go and server will start.
+$ go run main.go
+```
+## Using
+- Download and install it:
+```sh
+$ go get github.com/Lqlsoftware/Gopcap
+```
+- Import package in your code:
 ``` go
 import "github.com/Lqlsoftware/gopcap"
 ```
-Write a handle function like:
+- Write a handle function like:
 ``` go
 func handler(req *http.HttpRequest, rep *http.HttpResponse) {
     rep.Write("Hello World!\n")
 }
 ```
-Bind your handle function with an URL:
+- Bind your handle function with an URL in your main function:
 ``` go
 gopcap.Bind("/", http.GET, handler)
 ```
-Start server with port:
+- Start server with port:
 ``` go
-gopcap.Start(8998)
+gopcap.Start(80)
 ```
-Enjoy!
+- Create folder `root` in your project output and put static html in it.
+```sh
+$ mkdir root
+```
+- Run your project and enjoy!
