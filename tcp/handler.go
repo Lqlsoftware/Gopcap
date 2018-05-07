@@ -1,6 +1,8 @@
 package tcp
 
 import (
+	"time"
+
 	"github.com/Lqlsoftware/gopcap/http"
 
 	"github.com/google/gopacket"
@@ -46,7 +48,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	tcpConn := NewConnection(channel, synPacket)
 
 	// 超时计时器
-	timer := NewTimer(tcpTimeout)
+	timer := time.NewTimer(tcpTimeout)
 
 	// 状态变量设置
 	var response, input []byte
@@ -132,7 +134,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				startSeq = tcpConn.srcSeq
 				tcpConn.WriteWindow(response, startSeq)
 				tcpConn.State = SENDDATA
-				timer.Reset()
+				timer.Reset(tcpTimeout)
 
 			//	发送数据
 			case SENDDATA:
@@ -150,7 +152,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				} else {
 					// 继续发送数据
 					tcpConn.WriteWindow(response, startSeq)
-					timer.Reset()
+					timer.Reset(tcpTimeout)
 				}
 
 			// 发送FIN
@@ -164,31 +166,25 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 					tcpConn.sendAck()
 					// 重置连接 等待端口建立下个连接
 					tcpConn.State = UNCONNECT
-					timer.Reset()
+					timer.Reset(tcpTimeout)
 				}
 			}
-		default:
-		}
-
-		// 计时器
-		if tcpConn.State == UNCONNECT {
-			// 超时关闭连接
-			if timer.Tick() {
+		case <-timer.C:
+			// 计时器
+			if tcpConn.State == UNCONNECT {
 				return
-			}
-		} else if tcpConn.State == SENDDATA {
-			// 超时重传
-			if timer.Tick() {
+			} else if tcpConn.State == SENDDATA {
+				// 超时重传
 				tcpConn.Rewrite(response, startSeq)
-				timer.Reset()
-			}
-		} else if tcpConn.State == CONNECTED {
-			// keep-alive 超时关闭连接
-			if timer.Tick() {
+				timer.Reset(tcpTimeout)
+			} else if tcpConn.State == CONNECTED {
+				// keep-alive 超时关闭连接
 				tcpConn.sendFin()
 				tcpConn.State = SENDFIN
-				timer.Reset()
+				timer.Reset(tcpTimeout)
 			}
 		}
+
+
 	}
 }
