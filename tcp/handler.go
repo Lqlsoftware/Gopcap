@@ -167,6 +167,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 					timer.Reset()
 				}
 			}
+		default:
 		}
 
 		// 计时器
