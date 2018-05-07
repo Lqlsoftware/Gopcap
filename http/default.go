@@ -66,7 +66,7 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
 		// gzip 压缩
 		if useGzip {
 			// 设置返回header 通知浏览器压缩格式
-			(*response.headeyr)["Content-Encoding"] = "gzip"
+			(*response.header)["Content-Encoding"] = "gzip"
 
 			// 压缩数据
 			var b bytes.Buffer
