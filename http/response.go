@@ -6,7 +6,7 @@ import (
 )
 
 // "/r/n"
-var CLRF = []byte{13,10}
+var CRLF = []byte{13,10}
 
 // ": "
 var SEP = []byte{58,32}
@@ -60,16 +60,16 @@ func (rep *HttpResponse)getBytes() []byte {
 	buf = append(buf, []byte(strconv.Itoa(int(rep.stateCode)))...)
 	buf = append(buf, 32)
 	buf = append(buf, []byte(getStateName(rep.stateCode))...)
-	buf = append(buf, CLRF...)
+	buf = append(buf, CRLF...)
 
 	// header
 	for key,value := range *rep.header {
 		buf = append(buf, []byte(key)...)
 		buf = append(buf, SEP...)
 		buf = append(buf, []byte(value)...)
-		buf = append(buf, CLRF...)
+		buf = append(buf, CRLF...)
 	}
-	buf = append(buf, CLRF...)
+	buf = append(buf, CRLF...)
 	
 	// content
 	buf = append(buf, rep.contents...)
