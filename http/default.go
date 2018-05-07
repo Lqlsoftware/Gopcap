@@ -21,8 +21,9 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
 		return
 	}
 
-	isGzip := false
+	useGzip,useCache := false,false
 	cachePath := "root/_temp" + *request.url
+	filePath := "root" + *request.url
 
 	// 检查支持 gzip 压缩
 	if encoding,ok := (*request.header)["Accept-Encoding"];ok {
@@ -31,16 +32,23 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
 		for _,v := range encodes {
 			// 支持gzip压缩
 			if v == "gzip" {
-				isGzip = true
+				useGzip = true
 				break
 			}
 		}
 	}
 
 	// 检查缓存是否有已压缩文件
+	if useGzip && checkFileIsExist(cachePath) {
+		// 检查缓存文件和新文件的修改时间
+		if getFileModTime(cachePath) >= getFileModTime(filePath) {
+			useCache = true
+		}
+	}
+
 	var dat []byte
 	var err error
-	if isGzip && checkFileIsExist(cachePath) {
+	if useCache {
 		// 设置返回header 通知浏览器压缩格式
 		(*response.header)["Content-Encoding"] = "gzip"
 
@@ -56,7 +64,7 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
 		}
 
 		// gzip 压缩
-		if isGzip {
+		if useGzip {
 			// 设置返回header 通知浏览器压缩格式
 			(*response.header)["Content-Encoding"] = "gzip"
 
