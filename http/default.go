@@ -12,9 +12,12 @@ import (
 func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
 	// 检查URL
 	if *request.url == "/" {
-		response.stateCode = OK
-		response.contents = []byte(defaultIndex)
-		return
+		if !checkFileIsExist("root/index.html") {
+			response.stateCode = OK
+			response.contents = []byte(defaultIndex)
+			return
+		}
+		*request.url = "/index.html"
 	} else if strings.HasSuffix(*request.url,"/") {
 		response.stateCode = Forbidden
 		response.contents = []byte(page403)
