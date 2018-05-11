@@ -11,7 +11,7 @@ func getAdapter() *pcap.Interface {
 	check(err)
 	idx := 0
 	for idx = range adapters {
-		if adapters[idx].Addresses != nil {
+		if adapters[idx].Addresses != nil && len(adapters[idx].Addresses) != 0 {
 			break
 		}
 	}
