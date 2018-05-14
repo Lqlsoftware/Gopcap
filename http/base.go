@@ -24,6 +24,8 @@ func getStateName(state HttpStateCode) string {
 	switch state {
 	case OK:
 		return "OK"
+	case PartialContent:
+		return "Partial Content"
 	case BadRequest:
 		return "Bad Request"
 	case Unauthorized:

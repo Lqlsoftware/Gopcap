@@ -13,6 +13,7 @@ const (
 type HttpStateCode uint16
 const (
 	OK 						HttpStateCode = 200
+	PartialContent			HttpStateCode = 206
 	BadRequest				HttpStateCode = 400
 	Unauthorized			HttpStateCode = 401
 	Forbidden				HttpStateCode = 403

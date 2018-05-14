@@ -40,6 +40,8 @@ func (req *HttpRequest)generateResponse() *HttpResponse {
 	header := make(map[string]string)
 	header["Server"] = "Gopcap"
 	header["Date"] = time.Now().String()
+	header["Accept-Ranges"] = "bytes"
+
 	return &HttpResponse{
 		header:		&header,
 		version: 	req.version,

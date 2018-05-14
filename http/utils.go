@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 func checkFileIsExist(filename string) bool {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		return false
@@ -21,14 +27,7 @@ func checkType(url string) bool {
 }
 
 // 获取文件修改时间
-func getFileModTime(path string) int64 {
-	f, err := os.Open(path)
-	if err != nil {
-		log.Println("open file error")
-		return time.Now().Unix()
-	}
-	defer f.Close()
-
+func getFileModTime(f *os.File) int64 {
 	fi, err := f.Stat()
 	if err != nil {
 		log.Println("stat fileinfo error")
@@ -36,4 +35,15 @@ func getFileModTime(path string) int64 {
 	}
 
 	return fi.ModTime().Unix()
+}
+
+// 获取文件大小
+func getFileSize(f *os.File) int64 {
+	fi, err := f.Stat()
+	if err != nil {
+		log.Println("stat fileinfo error")
+		return -1
+	}
+
+	return fi.Size()
 }
