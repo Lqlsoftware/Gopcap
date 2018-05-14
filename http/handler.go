@@ -1,9 +1,13 @@
 package http
 
-import "log"
+import (
+	"log"
+
+	"github.com/Lqlsoftware/gopcap/php"
+)
 
 // HTTP包处理
-func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
+func Handler(rawPacket []byte, phpPlugin *php.Plugin) (rep []byte, isKeepAlive bool) {
 	// 转换TCP交付的包为HTTP-REQUEST
 	request,err := parserRequest(rawPacket)
 	if err != nil {
@@ -29,13 +33,13 @@ func Handler(rawPacket []byte) (rep []byte, isKeepAlive bool) {
 	} else {
 		switch request.method {
 		case GET:
-			DefaultGETHandler(request, response)
+			DefaultGETHandler(request, response, phpPlugin)
 		case POST:
 			DefaultPOSTHandler(request, response)
 		case HEAD:
 			DefaultHEADHandler(request, response)
 		default:
-			DefaultGETHandler(request, response)
+			DefaultGETHandler(request, response, phpPlugin)
 		}
 	}
 

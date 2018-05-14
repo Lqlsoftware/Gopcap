@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/Lqlsoftware/gopcap/http"
+	"github.com/Lqlsoftware/gopcap/php"
 	"github.com/google/gopacket/layers"
 )
 
@@ -29,6 +30,10 @@ func Bind(Url string, method http.HttpMethod, handler func(*http.HttpRequest,*ht
 func DeBind(Url string, method http.HttpMethod) {
 	err := http.RemoveRouter([]byte(Url), method)
 	check(err)
+}
+
+func SetUsePhp() {
+	php.UsePhp = true
 }
 
 // 创建根目录root文件夹

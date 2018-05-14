@@ -3,13 +3,16 @@ package http
 import (
 	"bytes"
 	"compress/gzip"
+	"io"
 	"io/ioutil"
 	"strings"
+
+	"github.com/Lqlsoftware/gopcap/php"
 )
 
 // Default GET method
 // 		root/URL
-func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
+func DefaultGETHandler(request *HttpRequest, response *HttpResponse, phpPlugin *php.Plugin) {
 	// 检查URL
 	if *request.url == "/" {
 		if !checkFileIsExist("root/index.html") {
@@ -21,6 +24,22 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse) {
 	} else if strings.HasSuffix(*request.url,"/") {
 		response.stateCode = Forbidden
 		response.contents = []byte(page403)
+		return
+	} else if phpPlugin != nil &&
+		strings.HasSuffix(*request.url,".php") &&
+		checkFileIsExist("root" + *request.url) {
+		var b bytes.Buffer
+		w := io.Writer(&b)
+		phpPlugin.SetPhpWriter(w)
+		err := phpPlugin.Exec("root" + *request.url)
+		if err != nil {
+			response.stateCode = InternalServerError
+			response.contents = []byte(defaultIndex)
+			return
+		}
+		response.stateCode = OK
+		response.contents = b.Bytes()
+		(*response.header)["Content-Type"] = "text/html; charset=utf-8"
 		return
 	}
 

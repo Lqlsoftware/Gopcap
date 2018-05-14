@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+	gopcap.SetUsePhp()
 	// bind url router
 	gopcap.Bind("/helloWorld", http.GET, rootHandler)
 	// start server

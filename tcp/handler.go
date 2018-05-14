@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Lqlsoftware/gopcap/http"
+	"github.com/Lqlsoftware/gopcap/php"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -54,6 +55,12 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	var response, input []byte
 	var startSeq, last, previous = uint32(0), uint32(0), uint32(0)
 	var isKeepAlive bool
+	var phpPlugin *php.Plugin
+
+	// php设置
+	if php.UsePhp {
+		phpPlugin = php.GetThreadPhp()
+	}
 
 	// 处理后续TCP包
 	for {
@@ -127,7 +134,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				input = append(input, tcp.Payload...)
 
 				// 交由HTTP处理
-				response,isKeepAlive = http.Handler(input)
+				response,isKeepAlive = http.Handler(input, phpPlugin)
 
 				// 发送response
 				input = nil
