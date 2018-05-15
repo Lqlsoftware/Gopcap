@@ -10,7 +10,7 @@ func main() {
 	// bind url router
 	gopcap.Bind("/helloWorld", http.GET, rootHandler)
 	// start server
-	gopcap.Start(8080)
+	gopcap.Start(80)
 }
 
 // example handler
