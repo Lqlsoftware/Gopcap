@@ -56,7 +56,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	// 状态变量设置
 	var input []byte
 	var response *stream.HttpStream
-	var startSeq, last, previous = uint32(0), uint32(0), uint32(0)
+	var startSeq, last = uint32(0), uint32(0)
 	var isKeepAlive bool
 	var phpPlugin *php.Plugin
 
@@ -87,18 +87,9 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				tcpConn.State = SENDFIN
 				continue
 			} else if tcp.Ack < tcpConn.srcSeq {
-				// 忽略连续重传请求
-				if tcp.Ack == last && last == previous {
-					continue
-				}
-				// 小于当前发送序号 且是第二次ACK
-				if tcp.Ack == last {
-					tcpConn.srcSeq = tcp.Ack
-				}
-				previous = last
-				last = tcp.Ack
 				tcpConn.dstAck = tcp.Ack
 				tcpConn.dstWin = tcp.Window
+				last = tcp.Ack
 				continue
 			}
 
@@ -165,7 +156,6 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 					tcpConn.WriteWindow(response, startSeq)
 					timer.Reset(tcpTimeout)
 				}
-
 			// 发送FIN
 			case SENDFIN:
 				tcpConn.State = WAITFINACK
@@ -186,6 +176,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				return
 			} else if tcpConn.State == SENDDATA {
 				// 超时重传
+				tcpConn.srcSeq = last
 				tcpConn.Rewrite(response, startSeq)
 				timer.Reset(tcpTimeout)
 			} else if tcpConn.State == CONNECTED {

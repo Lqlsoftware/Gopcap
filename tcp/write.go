@@ -24,9 +24,9 @@ func (conn *Connection)writeSlice(hs *stream.HttpStream, start uint32, window ui
 
 	data := hs.Output(start, end)
 
-	end = uint32(len(data))
+	end = end - start
 	start = 0
-	curr := start + 1400
+	curr := uint32(1400)
 	for end - start > 0 {
 		if curr > end {
 			curr = end

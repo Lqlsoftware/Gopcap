@@ -2,7 +2,6 @@ package stream
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 )
 
@@ -86,7 +85,7 @@ func (hs *HttpStream)Output(start, end uint32) []byte {
 		}
 	}
 	end = end - hcLen + hs.start
-	start = min(start - hcLen + hs.start, end)
+	start = start - hcLen + hs.start
 
 	// 根据流类型输出
 	if hs.flag == 1 {
@@ -96,7 +95,6 @@ func (hs *HttpStream)Output(start, end uint32) []byte {
 		hs.buffer.Write(data)
 	} else if hs.flag == 2 {
 		// []byte
-		fmt.Println(start,end,hs.content.Len())
 		hs.buffer.Write(hs.content.Bytes()[start:end])
 	}
 	return hs.buffer.Bytes()
