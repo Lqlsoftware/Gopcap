@@ -3,6 +3,8 @@ package http
 import (
 	"strings"
 	"time"
+
+	"github.com/Lqlsoftware/gopcap/stream"
 )
 
 // HTTP请求
@@ -45,6 +47,7 @@ func (req *HttpRequest)generateResponse() *HttpResponse {
 	return &HttpResponse{
 		header:		&header,
 		version: 	req.version,
+		contents:	stream.NewFileStream(),
 	}
 }
 

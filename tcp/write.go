@@ -1,25 +1,31 @@
 package tcp
 
 import (
+	"github.com/Lqlsoftware/gopcap/stream"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
 
 // TCP写入数据接口 每次最多发送接收方窗口大小的数据
-func (conn *Connection)WriteWindow(data []byte, startSeq uint32) {
+func (conn *Connection)WriteWindow(hs *stream.HttpStream, startSeq uint32) {
 	window := conn.dstWin - 10
 	start := conn.dstAck - startSeq
-	conn.writeSlice(data, start, window)
+	conn.writeSlice(hs, start, window)
 }
 
 // 分段写入数据
-func (conn *Connection)writeSlice(data []byte, start uint32, window uint16) {
+func (conn *Connection)writeSlice(hs *stream.HttpStream, start uint32, window uint16) {
 	// 分片发送
 	end := start + uint32(window)
-	length := uint32(len(data))
+	length := hs.Len()
 	if end > length {
 		end = length
 	}
+
+	data := hs.Output(start, end)
+
+	end = uint32(len(data))
+	start = 0
 	curr := start + 1400
 	for end - start > 0 {
 		if curr > end {
@@ -33,12 +39,12 @@ func (conn *Connection)writeSlice(data []byte, start uint32, window uint16) {
 }
 
 // 重发数据
-func (conn *Connection)Rewrite(data []byte, startSeq uint32) {
-	idx := len(data) - int(conn.srcSeq - conn.dstAck)
-	if idx < 0 || idx >= len(data) {
+func (conn *Connection)Rewrite(hs *stream.HttpStream, startSeq uint32) {
+	idx := hs.Len() - conn.srcSeq + conn.dstAck
+	if idx < 0 || idx >= hs.Len() {
 		return
 	}
-	conn.WriteWindow(data, startSeq)
+	conn.WriteWindow(hs, startSeq)
 }
 
 // TCP发送小于1400字节的数据

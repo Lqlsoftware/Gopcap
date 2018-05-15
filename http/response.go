@@ -1,8 +1,11 @@
 package http
 
 import (
+	"bytes"
 	"reflect"
 	"strconv"
+
+	"github.com/Lqlsoftware/gopcap/stream"
 )
 
 // "/r/n"
@@ -20,19 +23,19 @@ type HttpResponse struct {
 	// HTTP-State
 	stateCode	HttpStateCode
 	// HTTP-Content
-	contents	[]byte
+	contents	*stream.HttpStream
 }
 
 // Response Content 写入接口
 func (rep *HttpResponse)Write(Data ...interface{}) {
 	for argNum, arg := range Data {
 		if argNum > 0 {
-			rep.contents = append(rep.contents,' ')
+			rep.contents.WriteString(" ")
 		}
 		if arg != nil {
-			rep.contents = append(rep.contents, []byte(reflect.ValueOf(arg).String())...)
+			rep.contents.WriteString(reflect.ValueOf(arg).String())
 		} else {
-			rep.contents = append(rep.contents,[]byte("nil")...)
+			rep.contents.WriteString("nil")
 		}
 	}
 }
@@ -42,36 +45,36 @@ func (rep *HttpResponse)SetHeader(key string, value string) {
 	(*rep.header)[key] = value
 }
 
-// response变成字节流
-func (rep *HttpResponse)getBytes() []byte {
+// response变成HttpStream
+func (rep *HttpResponse)getStream() *stream.HttpStream {
 	// 设置默认头部
-	(*rep.header)["Content-Length"] = strconv.Itoa(len(rep.contents))
+	(*rep.header)["Content-Length"] = strconv.FormatInt(rep.contents.GetContentLen(),10)
 
 	// 计算byte总共长度 防止append申请内存拷贝
-	length := 38 + len(rep.contents)
+	length := 38
 	for key,value := range *rep.header {
-		length += len(key) + len(value) + 4
+		length += len(key) + len(value)
 	}
 
 	// 申请固定capacity的内存
-	buf := make([]byte, 0, length)
-	buf = append(buf, []byte(*rep.version)...)
-	buf = append(buf, 32)
-	buf = append(buf, []byte(strconv.Itoa(int(rep.stateCode)))...)
-	buf = append(buf, 32)
-	buf = append(buf, []byte(getStateName(rep.stateCode))...)
-	buf = append(buf, CRLF...)
+	buffer := bytes.NewBuffer(make([]byte, 0, length))
+	buffer.WriteString(*rep.version)
+	buffer.WriteByte(32)
+	buffer.WriteString(strconv.Itoa(int(rep.stateCode)))
+	buffer.WriteByte(32)
+	buffer.WriteString(getStateName(rep.stateCode))
+	buffer.Write(CRLF)
 
 	// header
 	for key,value := range *rep.header {
-		buf = append(buf, []byte(key)...)
-		buf = append(buf, SEP...)
-		buf = append(buf, []byte(value)...)
-		buf = append(buf, CRLF...)
+		buffer.WriteString(key)
+		buffer.Write(SEP)
+		buffer.WriteString(value)
+		buffer.Write(CRLF)
 	}
-	buf = append(buf, CRLF...)
-	
-	// content
-	buf = append(buf, rep.contents...)
-	return buf
+	buffer.Write(CRLF)
+
+	rep.contents.SetRawHeader(buffer.Bytes())
+	rep.contents.UpdateLen()
+	return rep.contents
 }

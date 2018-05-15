@@ -4,14 +4,15 @@ import (
 	"log"
 
 	"github.com/Lqlsoftware/gopcap/php"
+	"github.com/Lqlsoftware/gopcap/stream"
 )
 
 // HTTP包处理
-func Handler(rawPacket []byte, phpPlugin *php.Plugin) (rep []byte, isKeepAlive bool) {
+func Handler(rawPacket []byte, phpPlugin *php.Plugin) (rep *stream.HttpStream, isKeepAlive bool) {
 	// 转换TCP交付的包为HTTP-REQUEST
 	request,err := parserRequest(rawPacket)
 	if err != nil {
-		return []byte{}, false
+		return stream.NewFileStream(), false
 	}
 
 	// 判断是否keep-alive
@@ -45,5 +46,5 @@ func Handler(rawPacket []byte, phpPlugin *php.Plugin) (rep []byte, isKeepAlive b
 
 	// 控制台log请求内容
 	log.Println("|",response.stateCode,"|",getmethodName(request.method),*request.url)
-	return response.getBytes(), isKeepAlive
+	return response.getStream(), isKeepAlive
 }
