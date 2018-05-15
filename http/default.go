@@ -95,7 +95,7 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse, phpPlugin *
 				useSlice = false
 			}
 		}
-	} else if encoding,ok := (*request.header)["Accept-Encoding"];ok {
+	} else if encoding,ok := (*request.header)["Accept-Encoding"];ok && checkType(*request.url) {
 		encodes := strings.Split(encoding, ", ")
 		// 检查浏览器是否支持gzip压缩
 		for _,v := range encodes {
@@ -149,11 +149,8 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse, phpPlugin *
 			dat = b.Bytes()
 			response.contents.Write(dat)
 
-			// 检查是否为静态text类文件
-			if checkType(*request.url) {
-				// 缓存
-				ioutil.WriteFile(cachePath, dat, 0666)
-			}
+			// 缓存
+			ioutil.WriteFile(cachePath, dat, 0666)
 		} else {
 			// 文件最后修改时间 - 文件大小字节数转为16进制
 			(*response.header)["ETag"] = strconv.FormatInt(getFileModTime(f),10)
