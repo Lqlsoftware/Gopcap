@@ -5,6 +5,7 @@ import (
 
 	"github.com/Lqlsoftware/gopcap/http"
 	"github.com/Lqlsoftware/gopcap/php"
+	"github.com/Lqlsoftware/gopcap/stream"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -29,6 +30,7 @@ func PacketHandler(packet gopacket.Packet) {
 	// 处理请求 端口通道存在
 	useMap.RLock()
 	ch,ok := chMap[tcpLayer.SrcPort]
+	ok = ok && ch != nil
 	useMap.RUnlock()
 	if ok {
 		// 发送至相应端口通道
@@ -52,7 +54,8 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	timer := time.NewTimer(tcpTimeout)
 
 	// 状态变量设置
-	var response, input []byte
+	var input []byte
+	var response *stream.HttpStream
 	var startSeq, last, previous = uint32(0), uint32(0), uint32(0)
 	var isKeepAlive bool
 	var phpPlugin *php.Plugin
@@ -146,7 +149,8 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 			//	发送数据
 			case SENDDATA:
 				// 接收到最后序列的ACK 数据传输完成
-				if tcpConn.dstAck >= startSeq + uint32(len(response)) {
+				if tcpConn.dstAck >= startSeq + response.Len() {
+					response.Close()
 					response = nil
 					if isKeepAlive {
 						// 保持连接

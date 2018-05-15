@@ -24,6 +24,6 @@ func delChannel(key layers.TCPPort) {
 	channel := chMap[key]
 	useMap.Lock()
 	delete(chMap, key)
-	useMap.Unlock()
 	close(channel)
+	useMap.Unlock()
 }
