@@ -1,6 +1,6 @@
 package tcp
 
-const tcpTimeout = 300000000
+const tcpTimeout = 500000000
 
 // TCP State
 type State uint8
