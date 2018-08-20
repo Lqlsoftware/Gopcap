@@ -56,3 +56,22 @@ gopcap.Start(80)
 - Run your project and enjoy!
 
 - Put static html file in `root` folder (generate automaticly).
+
+## Php7
+- Download go-php library github.com/deuill/go-php
+```sh
+$ go get github.com/deuill/go-php
+```
+- Download Gopcap with tags php:
+```sh
+$ go get -tags php github.com/Lqlsoftware/Gopcap
+```
+or build Gopcap with tags php:
+```sh
+$ go build -tags php github.com/Lqlsoftware/Gopcap
+```
+- Enable Gopcap php in your main function:
+``` go
+gopcap.SetUsePhp()
+```
+- .php file will be excuted automaticaly.

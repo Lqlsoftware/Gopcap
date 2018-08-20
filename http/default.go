@@ -131,31 +131,29 @@ func DefaultGETHandler(request *HttpRequest, response *HttpResponse, phpPlugin *
 			response.stateCode = PartialContent
 		}
 		return
-	} else {
+	} else if useGzip {
 		// gzip 压缩
-		if useGzip {
-			// 读入文件
-			dat, err = ioutil.ReadFile(filePath)
-			check(err)
+		// 读入文件
+		dat, err = ioutil.ReadFile(filePath)
+		check(err)
 
-			// 设置返回header 通知浏览器压缩格式
-			(*response.header)["Content-Encoding"] = "gzip"
+		// 设置返回header 通知浏览器压缩格式
+		(*response.header)["Content-Encoding"] = "gzip"
 
-			// 压缩数据
-			var b bytes.Buffer
-			w := gzip.NewWriter(&b)
-			w.Write(dat)
-			w.Flush()
-			dat = b.Bytes()
-			response.contents.Write(dat)
-
-			// 缓存
-			ioutil.WriteFile(cachePath, dat, 0666)
-		} else {
-			// 文件最后修改时间 - 文件大小字节数转为16进制
-			(*response.header)["ETag"] = strconv.FormatInt(getFileModTime(f),10)
-			response.contents.SetFileDescriptor(f, 0, uint32(sliceSize))
-		}
+		// 压缩数据
+		var b bytes.Buffer
+		w := gzip.NewWriter(&b)
+		w.Write(dat)
+		w.Flush()
+		dat = b.Bytes()
+		response.contents.Write(dat)
+		
+		// 缓存
+		ioutil.WriteFile(cachePath, dat, 0666)
+	} else {
+		// 文件最后修改时间 - 文件大小字节数转为16进制
+		(*response.header)["ETag"] = strconv.FormatInt(getFileModTime(f),10)
+		response.contents.SetFileDescriptor(f, 0, uint32(sliceSize))
 	}
 	// 设置Content-Type
 	(*response.header)["Content-Type"] = getContentType(*request.url) + "; charset=utf-8"
