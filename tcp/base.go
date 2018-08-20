@@ -1,6 +1,8 @@
 package tcp
 
-const tcpTimeout = 500000000
+import "time"
+
+const tcpTimeout = time.Millisecond * 300
 
 // TCP State
 type State uint8

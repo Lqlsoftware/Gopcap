@@ -68,6 +68,21 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 	// 处理后续TCP包
 	for {
 		select {
+		case <-timer.C:
+			// 计时器
+			if tcpConn.State == UNCONNECT {
+				return
+			} else if tcpConn.State == SENDDATA {
+				// 超时重传
+				tcpConn.srcSeq = last
+				tcpConn.Rewrite(response, startSeq)
+				timer.Reset(tcpTimeout)
+			} else if tcpConn.State == CONNECTED {
+				// keep-alive 超时关闭连接
+				tcpConn.sendFin()
+				tcpConn.State = SENDFIN
+				timer.Reset(tcpTimeout)
+			}
 		case request := <-*tcpConn.Channel:
 			// 解析TCP层
 			tcp := request.TransportLayer().(*layers.TCP)
@@ -107,11 +122,11 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 					tcpConn.State = SENDFIN
 				}
 
-			// 等待握手ACK
+				// 等待握手ACK
 			case WAITSYNACK:
 				tcpConn.State = CONNECTED
 
-			// 已连接 / keep-alive
+				// 已连接 / keep-alive
 			case CONNECTED:
 				// 返回ACK
 				tcpConn.sendAck()
@@ -128,7 +143,7 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				input = append(input, tcp.Payload...)
 
 				// 交由HTTP处理
-				response,isKeepAlive = http.Handler(input, phpPlugin)
+				response, isKeepAlive = http.Handler(input, phpPlugin)
 
 				// 发送response
 				input = nil
@@ -137,10 +152,10 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 				tcpConn.State = SENDDATA
 				timer.Reset(tcpTimeout)
 
-			//	发送数据
+				//	发送数据
 			case SENDDATA:
 				// 接收到最后序列的ACK 数据传输完成
-				if tcpConn.dstAck >= startSeq + response.Len() {
+				if tcpConn.dstAck >= startSeq+response.Len() {
 					response.Close()
 					response = nil
 					if isKeepAlive {
@@ -156,11 +171,11 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 					tcpConn.WriteWindow(response, startSeq)
 					timer.Reset(tcpTimeout)
 				}
-			// 发送FIN
+				// 发送FIN
 			case SENDFIN:
 				tcpConn.State = WAITFINACK
 
-			// 等待FIN的ACK
+				// 等待FIN的ACK
 			case WAITFINACK:
 				if tcp.FIN {
 					tcpConn.dstSeq++
@@ -170,23 +185,6 @@ func handleThread(synPacket gopacket.Packet, dstPort layers.TCPPort) {
 					timer.Reset(tcpTimeout)
 				}
 			}
-		case <-timer.C:
-			// 计时器
-			if tcpConn.State == UNCONNECT {
-				return
-			} else if tcpConn.State == SENDDATA {
-				// 超时重传
-				tcpConn.srcSeq = last
-				tcpConn.Rewrite(response, startSeq)
-				timer.Reset(tcpTimeout)
-			} else if tcpConn.State == CONNECTED {
-				// keep-alive 超时关闭连接
-				tcpConn.sendFin()
-				tcpConn.State = SENDFIN
-				timer.Reset(tcpTimeout)
-			}
 		}
-
-
 	}
 }
