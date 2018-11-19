@@ -3,17 +3,17 @@ package tcp
 import "github.com/google/gopacket/layers"
 
 // 生成以太网/IP层的报头
-func (conn *Connection)getUpperLayers() (*layers.Ethernet, *layers.IPv4) {
+func (connection *Connection)getUpperLayers() (*layers.Ethernet, *layers.IPv4) {
 	// ethernet
 	ethLayer := layers.Ethernet{
-		SrcMAC:       conn.srcMac,
-		DstMAC:       conn.dstMac,
+		SrcMAC:       connection.srcMac,
+		DstMAC:       connection.dstMac,
 		EthernetType: layers.EthernetTypeIPv4,
 	}
 	// ip
 	ipLayer := layers.IPv4{
-		SrcIP:    conn.srcIP,
-		DstIP:    conn.dstIP,
+		SrcIP:    connection.srcIP,
+		DstIP:    connection.dstIP,
 		TTL:      64,
 		Protocol: layers.IPProtocolTCP,
 		Version:  4,
@@ -23,13 +23,13 @@ func (conn *Connection)getUpperLayers() (*layers.Ethernet, *layers.IPv4) {
 }
 
 // 生成以太网报头
-func (conn *Connection)getLayers() *layers.TCP {
+func (connection *Connection)getLayers() *layers.TCP {
 	return &layers.TCP{
-		SrcPort: 	conn.srcPort,
-		DstPort: 	conn.dstPort,
-		ACK:	 	true,
-		Ack:	 	conn.dstSeq,
-		Seq:	 	conn.srcSeq,
-		Window:  	0xFFFF,
+		SrcPort: connection.srcPort,
+		DstPort: connection.dstPort,
+		ACK:     true,
+		Ack:     connection.dstSeq,
+		Seq:     connection.srcSeq,
+		Window:  0xFFFF,
 	}
 }
