@@ -1,5 +1,5 @@
 # Gopcap
-A Multithreading HTTP web server based on pcap TCP layer.
+A Multithreading HTTP Web framework.
 
 ## Quick start
 
